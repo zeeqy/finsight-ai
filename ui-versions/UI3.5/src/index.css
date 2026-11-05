@@ -1,0 +1,764 @@
+@import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque/wght.css";
+@import "@fontsource-variable/hanken-grotesk/wght.css";
+
+/* Every colour lives here. The dark theme redefines the same names under :root[data-theme='dark']. */
+:root {
+  color-scheme: light;
+
+  --paper: #FFF9E3;
+  --paper-2: #FFF0BA;
+  --surface: #FFFFFF;
+  --ink: #16224A;
+  --ink-2: #3B4570;
+  --ink-3: #59627F;
+  --line: #F1E5BB;
+  --line-strong: #8F835B;
+
+  --gold: #FFC80A;
+  --gold-deep: #E6A800;
+  --gold-chart: #AD7F00;
+  --gold-wash: #FFF0BA;
+  --on-gold: #16224A;
+  --on-gold-2: #3B4570;
+
+  /* Brand bar (sidebar, phone bar), the logo mark and the avatar */
+  --bar: var(--gold);
+  --bar-line: var(--gold-deep);
+  --bar-ink: #16224A;
+  --mark-bg: #16224A;
+  --mark-line: var(--gold);
+
+  /* Oyen's stage on the Home page and the light glass panels */
+  --stage-from: #DCE7FA;
+  --stage-to: #F4F8FF;
+  --stage-ring: #B9CCEE;
+  --glass: rgb(255 255 255 / 0.62);
+  --glass-strong: rgb(255 255 255 / 0.8);
+  --glass-line: rgb(255 255 255 / 0.75);
+  --scrim: rgb(22 34 74 / 0.42);
+
+  /* Small colour jobs: every module and section picks one of these */
+  --blue: #1D5FC4;
+  --blue-deep: #16498F;
+  --blue-wash: #E3EDFC;
+  --purple: #6A3FC4;
+  --purple-deep: #512E99;
+  --purple-wash: #EEE8FC;
+  --green: #0F7A4F;
+  --green-deep: #0A5A3A;
+  --green-wash: #DDF3E7;
+  --orange: #AD4608;
+  --orange-deep: #8A3706;
+  --orange-wash: #FDE9DA;
+  --pink: #C0265F;
+  --pink-deep: #951C49;
+  --pink-wash: #FCE5EE;
+  --teal: #0B7480;
+  --teal-deep: #075761;
+  --teal-wash: #DDF2F3;
+
+  /* The current module's colour: buttons, selection, focus. Set by data-module below. */
+  --accent: var(--blue);
+  --accent-deep: var(--blue-deep);
+  --accent-wash: var(--blue-wash);
+  --on-accent: #FFFFFF;
+  /* Text on a solid module colour (active nav chip, page icon) and on solid danger */
+  --on-tone: #FFFFFF;
+  --on-danger: #FFFFFF;
+
+  /* Meaning, the same on every module */
+  --ok: #0F7A4F;
+  --ok-deep: #0A5A3A;
+  --ok-wash: #DDF3E7;
+  --danger: #B3261E;
+  --danger-deep: #8F1D17;
+  --danger-wash: #FBE8E5;
+  --warn: #7F5300;
+  --warn-wash: #FDEBC8;
+
+  /* Engraved-line motif, read by the Rosette canvas */
+  --guilloche: 33 27 8;
+  --guilloche-soft: 173 127 0;
+
+  /* Spending categories, each at least 3:1 on white */
+  --cat-food: #A8650A;
+  --cat-transport: #1672A8;
+  --cat-shopping: #8A3FA0;
+  --cat-utilities: #C2540A;
+  --cat-groceries: #2B8A3E;
+  --cat-healthcare: #C2264B;
+  --cat-entertainment: #4A5BC4;
+  --cat-education: #7A6A00;
+  --cat-transfer: #5F7570;
+  --cat-income: #0F7A4F;
+  --cat-others: #6B7A75;
+  --cat-a: #B5338A;
+  --cat-b: #0E7C86;
+  --cat-c: #9A5B00;
+  --cat-d: #6C4AB6;
+  --cat-e: #2F6DB5;
+  --cat-f: #3C7D22;
+  --cat-g: #C23B5A;
+  --cat-h: #9238A8;
+
+  --soft: 0 1px 2px rgb(22 34 74 / 0.06), 0 4px 14px -6px rgb(22 34 74 / 0.12);
+  --lift: 0 1px 2px rgb(22 34 74 / 0.08), 0 18px 40px -18px rgb(22 34 74 / 0.34);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Dark theme: Oyen's navy as the base, yellow kept for the one leading figure and the main button.
+   Colours are lighter so each keeps at least 4.5:1 text contrast (3:1 for marks) on the navy surface. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --paper: #0E1530;
+  --paper-2: #172248;
+  --surface: #18234A;
+  --ink: #F2F1EA;
+  --ink-2: #C8CDE0;
+  --ink-3: #A0A9C6;
+  --line: #2A3768;
+  --line-strong: #5C6A9E;
+
+  --gold: #FFC80A;
+  --gold-deep: #E6A800;
+  --gold-chart: #FFC80A;
+  --gold-wash: #3A3214;
+
+  --bar: #111A3A;
+  --bar-line: #233064;
+  --bar-ink: #F2F1EA;
+  --mark-bg: #FFC80A;
+  --mark-line: #16224A;
+
+  --stage-from: #1D2C5E;
+  --stage-to: #121B3E;
+  --stage-ring: #33457F;
+  --glass: rgb(24 35 74 / 0.6);
+  --glass-strong: rgb(24 35 74 / 0.82);
+  --glass-line: rgb(255 255 255 / 0.1);
+  --scrim: rgb(5 9 24 / 0.6);
+
+  --blue: #7EB0FF;
+  --blue-deep: #A9C9FF;
+  --blue-wash: #1D3060;
+  --purple: #B9A0FF;
+  --purple-deep: #D3C4FF;
+  --purple-wash: #2C2659;
+  --green: #5AD69E;
+  --green-deep: #8CE6BD;
+  --green-wash: #153F3A;
+  --orange: #FFA866;
+  --orange-deep: #FFC79B;
+  --orange-wash: #44301F;
+  --pink: #FF86B4;
+  --pink-deep: #FFB1CF;
+  --pink-wash: #45213C;
+  --teal: #57D3DC;
+  --teal-deep: #8FE3E8;
+  --teal-wash: #13414C;
+
+  --on-accent: #0E1530;
+  --on-tone: #0E1530;
+  --on-danger: #0E1530;
+
+  --ok: #5AD69E;
+  --ok-deep: #8CE6BD;
+  --ok-wash: #153F3A;
+  --danger: #FF8F85;
+  --danger-deep: #FFB3AC;
+  --danger-wash: #4A2030;
+  --warn: #FFC56B;
+  --warn-wash: #43361A;
+
+  --guilloche: 242 241 234;
+  --guilloche-soft: 255 200 10;
+
+  --cat-food: #E3A03F;
+  --cat-transport: #5FB3E6;
+  --cat-shopping: #C98BDB;
+  --cat-utilities: #F08E4A;
+  --cat-groceries: #6CC97C;
+  --cat-healthcare: #F07890;
+  --cat-entertainment: #8C9BF2;
+  --cat-education: #D4C04A;
+  --cat-transfer: #9AB3AD;
+  --cat-income: #5AD69E;
+  --cat-others: #A9B6B1;
+  --cat-a: #E37BC2;
+  --cat-b: #4FC4CC;
+  --cat-c: #D9A040;
+  --cat-d: #A88BEA;
+  --cat-e: #6FA3E8;
+  --cat-f: #85C766;
+  --cat-g: #EE7C94;
+  --cat-h: #C882DE;
+
+  --soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 14px -6px rgb(0 0 0 / 0.45);
+  --lift: 0 1px 2px rgb(0 0 0 / 0.35), 0 18px 40px -18px rgb(0 0 0 / 0.7);
+}
+
+/* On a yellow surface text stays navy in both themes */
+.card-gold,
+.on-gold,
+.btn-primary {
+  --ink: var(--on-gold);
+  --ink-2: var(--on-gold-2);
+  --ink-3: var(--on-gold-2);
+  --line: rgb(22 34 74 / 0.16);
+  --line-strong: rgb(22 34 74 / 0.4);
+  --paper-2: rgb(22 34 74 / 0.08);
+  /* Panels inside a yellow card stay light in both themes */
+  --surface: #FFFFFF;
+  --paper: #FFF9E3;
+  --guilloche: 22 34 74;
+  --guilloche-soft: 22 34 74;
+  --mark-bg: #16224A;
+  --mark-line: #FFC80A;
+}
+
+/* The brand bar keeps its own text colour */
+.on-bar {
+  --ink: var(--bar-ink);
+  color: var(--bar-ink);
+}
+
+:root[data-theme='dark'] .on-bar {
+  --ink-2: #C8CDE0;
+  --ink-3: #A0A9C6;
+}
+
+:root[data-module='home'] {
+  --accent: var(--blue);
+  --accent-deep: var(--blue-deep);
+  --accent-wash: var(--blue-wash);
+}
+
+:root[data-module='dashboard'] {
+  --accent: var(--blue);
+  --accent-deep: var(--blue-deep);
+  --accent-wash: var(--blue-wash);
+}
+
+:root[data-module='advisor'] {
+  --accent: var(--purple);
+  --accent-deep: var(--purple-deep);
+  --accent-wash: var(--purple-wash);
+}
+
+:root[data-module='loan'] {
+  --accent: var(--green);
+  --accent-deep: var(--green-deep);
+  --accent-wash: var(--green-wash);
+}
+
+:root[data-module='goals'] {
+  --accent: var(--orange);
+  --accent-deep: var(--orange-deep);
+  --accent-wash: var(--orange-wash);
+}
+
+:root[data-module='health'] {
+  --accent: var(--teal);
+  --accent-deep: var(--teal-deep);
+  --accent-wash: var(--teal-wash);
+}
+
+:root[data-module='insurance'] {
+  --accent: var(--pink);
+  --accent-deep: var(--pink-deep);
+  --accent-wash: var(--pink-wash);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-wash: var(--accent-wash);
+  --color-on-accent: var(--on-accent);
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
+  --color-gold-chart: var(--gold-chart);
+  --color-gold-wash: var(--gold-wash);
+  --color-on-gold: var(--on-gold);
+  --color-bar: var(--bar);
+  --color-bar-line: var(--bar-line);
+  --color-ok: var(--ok);
+  --color-ok-deep: var(--ok-deep);
+  --color-ok-wash: var(--ok-wash);
+  --color-danger: var(--danger);
+  --color-danger-wash: var(--danger-wash);
+  --color-warn: var(--warn);
+  --color-warn-wash: var(--warn-wash);
+
+  --font-sans: 'Hanken Grotesk Variable', system-ui, 'Segoe UI', sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Hanken Grotesk Variable', system-ui, sans-serif;
+
+  --radius-control: 0.625rem;
+  --radius-panel: 1.125rem;
+  --shadow-soft: var(--soft);
+  --shadow-lift: var(--lift);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    transition: background-color 280ms ease, color 280ms ease;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    font-weight: 650;
+  }
+
+  button:not(:disabled), [role='button'], label[for], select:not(:disabled), summary {
+    cursor: pointer;
+  }
+
+  button:disabled, select:disabled, input:disabled {
+    cursor: not-allowed;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  ::selection {
+    background: var(--gold);
+    color: var(--on-gold);
+  }
+
+  input[type='number']::-webkit-inner-spin-button {
+    opacity: 0.4;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--line-strong);
+  }
+}
+
+@layer components {
+  /* Type */
+  .t-display {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 1.5rem + 2.6vw, 3.75rem);
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+    text-wrap: balance;
+  }
+
+  .t-page {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 1.35rem + 0.6vw, 1.875rem);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.12;
+  }
+
+  .t-section {
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+
+  .t-figure {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .t-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+
+  .t-note {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--ink-3);
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  /* Cards group everything that belongs together */
+  .card {
+    /* Keeps sr-only table labels inside scrolling tables, or they widen the whole page */
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--soft);
+  }
+
+  .card .overflow-x-auto {
+    position: relative;
+  }
+
+  /* The one figure a page leads with */
+  .card-gold {
+    background: var(--gold);
+    border-color: var(--gold-deep);
+    color: var(--on-gold);
+  }
+
+  .card-gold .t-label,
+  .card-gold .t-note {
+    color: var(--ink-2);
+  }
+
+  /* Cards answer the pointer: a soft glow, and tiles that open something also lift and tilt */
+  .card {
+    transition: box-shadow 220ms var(--ease-out), border-color 220ms ease, background-color 280ms ease, transform 260ms var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .card:hover {
+      border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
+    }
+
+    .card-lift:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--lift);
+    }
+  }
+
+  /* Light glass, used sparingly: Oyen's stage, the phone bar, menus and dialogs. Never behind figures. */
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--glass-line);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+  }
+
+  .glass-strong {
+    background: var(--glass-strong);
+    border: 1px solid var(--glass-line);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    backdrop-filter: blur(18px) saturate(1.5);
+  }
+
+  /* Oyen's stage: a pale-blue sky that makes the orange cat stand out from the yellow page */
+  .stage {
+    background:
+      radial-gradient(120% 80% at 70% 15%, var(--stage-to) 0%, transparent 60%),
+      linear-gradient(160deg, var(--stage-from), var(--stage-to));
+    border: 1px solid var(--stage-ring);
+  }
+
+  .rule {
+    border-top: 1px solid var(--line);
+  }
+
+  /* Page frame */
+  .page {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 2.5vw, 2rem);
+  }
+
+  /* Tones colour the small things: icon chips, tags and soft buttons */
+  .tone-accent { --tone: var(--accent); --tone-wash: var(--accent-wash); }
+  .tone-blue { --tone: var(--blue); --tone-wash: var(--blue-wash); }
+  .tone-purple { --tone: var(--purple); --tone-wash: var(--purple-wash); }
+  .tone-green { --tone: var(--green); --tone-wash: var(--green-wash); }
+  .tone-orange { --tone: var(--orange); --tone-wash: var(--orange-wash); }
+  .tone-pink { --tone: var(--pink); --tone-wash: var(--pink-wash); }
+  .tone-teal { --tone: var(--teal); --tone-wash: var(--teal-wash); }
+  .tone-gold { --tone: var(--on-gold); --tone-wash: var(--gold); }
+  .tone-gold { --on-tone: var(--gold); }
+  :root[data-theme='dark'] .tone-gold { --tone: var(--gold); --tone-wash: #3A3214; --on-tone: #16224A; }
+  .tone-danger { --tone: var(--danger); --tone-wash: var(--danger-wash); }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.625rem;
+    background: var(--tone-wash);
+    color: var(--tone);
+  }
+
+  .chip-lg {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.875rem;
+  }
+
+  /* Buttons */
+  .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-control);
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out), background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+
+  @media (hover: hover) {
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      box-shadow: 0 4px 0 var(--gold-chart), 0 10px 22px -10px color-mix(in srgb, var(--gold-deep) 70%, transparent);
+    }
+  }
+
+  .btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .btn:disabled {
+    opacity: 0.55;
+  }
+
+  /* Main action: a yellow key that presses down */
+  .btn-primary {
+    background: var(--gold);
+    color: var(--on-gold);
+    font-weight: 700;
+    box-shadow: 0 2px 0 var(--gold-chart);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--gold-deep);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    box-shadow: 0 1px 0 var(--gold-chart);
+  }
+
+  /* Confirms or goes forward, in the module's colour */
+  .btn-accent {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .btn-accent:hover:not(:disabled) {
+    background: var(--accent-deep);
+  }
+
+  /* Second action in a section */
+  .btn-soft {
+    background: var(--accent-wash);
+    color: var(--accent-deep);
+  }
+
+  .btn-soft:hover:not(:disabled) {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .btn-quiet {
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+  }
+
+  .btn-quiet:hover:not(:disabled) {
+    background: var(--paper-2);
+  }
+
+  .btn-danger {
+    background: var(--danger);
+    color: var(--on-danger);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: var(--danger-deep);
+  }
+
+  .btn-danger-quiet {
+    background: var(--surface);
+    color: var(--danger);
+    border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+  }
+
+  .btn-danger-quiet:hover:not(:disabled) {
+    background: var(--danger-wash);
+  }
+
+  .btn-icon {
+    min-width: 2.75rem;
+    padding: 0.5rem;
+    color: var(--ink-2);
+    background: transparent;
+  }
+
+  .btn-icon:hover:not(:disabled) {
+    background: var(--paper-2);
+    color: var(--ink);
+  }
+
+  .btn-sm {
+    min-height: 2.25rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .link {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    transition: color 160ms ease;
+  }
+
+  .link:hover {
+    color: var(--accent-deep);
+  }
+
+  /* Fields */
+  .field {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-control);
+    color: var(--ink);
+    font-size: 0.9375rem;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .field::placeholder {
+    color: var(--ink-3);
+  }
+
+  .field:hover:not(:disabled) {
+    border-color: var(--ink-3);
+  }
+
+  .field:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+
+  .field:disabled {
+    background: var(--paper-2);
+    color: var(--ink-3);
+  }
+
+  /* Small status text, always paired with an icon or a word */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .tag-ok { background: var(--ok-wash); color: var(--ok-deep); }
+  .tag-warn { background: var(--warn-wash); color: var(--warn); }
+  .tag-danger { background: var(--danger-wash); color: var(--danger); }
+  .tag-plain { background: var(--paper-2); color: var(--ink-2); }
+
+  /* Rolling digits */
+  .roll {
+    display: inline-flex;
+    align-items: baseline;
+    white-space: nowrap;
+  }
+
+  .roll-digit {
+    display: inline-block;
+    height: 1.1em;
+    line-height: 1.1em;
+    overflow: hidden;
+    vertical-align: bottom;
+    text-align: center;
+    width: 0.62em;
+  }
+
+  .roll-col {
+    display: block;
+    transition: transform 900ms var(--ease-out);
+    will-change: transform;
+  }
+
+  .roll-col > span {
+    display: block;
+    height: 1.1em;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Oyen on the sign-in screen floats gently */
+  .float-soft {
+    animation: float-soft 5s ease-in-out infinite;
+  }
+}
+
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

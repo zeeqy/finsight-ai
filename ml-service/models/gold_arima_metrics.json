@@ -1,0 +1,168 @@
+{
+  "data": {
+    "gold": "World Bank Commodity Markets (Pink Sheet) monthly gold USD/oz, via datahub.io/core/gold-prices",
+    "fx": "FRED EXMAUS, Malaysian ringgit to one US dollar, monthly average",
+    "unit": "MYR per gram",
+    "months": 321,
+    "start": "2000-01",
+    "end": "2026-09",
+    "latest_price_per_gram": 565.05
+  },
+  "model": "ARIMA(2, 1, 0) with drift on log price",
+  "order_selection_aic": [
+    {
+      "order": [
+        2,
+        1,
+        0
+      ],
+      "aic": -1003.97
+    },
+    {
+      "order": [
+        0,
+        1,
+        2
+      ],
+      "aic": -1003.59
+    },
+    {
+      "order": [
+        0,
+        1,
+        0
+      ],
+      "aic": -1002.43
+    },
+    {
+      "order": [
+        0,
+        1,
+        1
+      ],
+      "aic": -1002.43
+    },
+    {
+      "order": [
+        1,
+        1,
+        1
+      ],
+      "aic": -1001.99
+    },
+    {
+      "order": [
+        2,
+        1,
+        1
+      ],
+      "aic": -1001.99
+    },
+    {
+      "order": [
+        1,
+        1,
+        0
+      ],
+      "aic": -1001.95
+    },
+    {
+      "order": [
+        1,
+        1,
+        2
+      ],
+      "aic": -1001.65
+    },
+    {
+      "order": [
+        2,
+        1,
+        2
+      ],
+      "aic": -1000.31
+    }
+  ],
+  "implied_annual_drift": 0.1102,
+  "backtest": {
+    "window_months": 60,
+    "horizons": {
+      "h1": {
+        "forecasts": 59,
+        "arima": {
+          "mae": 10.79,
+          "rmse": 15.58,
+          "mape": 2.59
+        },
+        "drift": {
+          "mae": 10.89,
+          "rmse": 15.8,
+          "mape": 2.61
+        },
+        "naive": {
+          "mae": 11.27,
+          "rmse": 16.52,
+          "mape": 2.74
+        },
+        "arima_80pct_interval_coverage": 0.763
+      },
+      "h3": {
+        "forecasts": 57,
+        "arima": {
+          "mae": 23.0,
+          "rmse": 32.9,
+          "mape": 5.35
+        },
+        "drift": {
+          "mae": 22.96,
+          "rmse": 32.61,
+          "mape": 5.36
+        },
+        "naive": {
+          "mae": 25.66,
+          "rmse": 35.53,
+          "mape": 6.11
+        },
+        "arima_80pct_interval_coverage": 0.737
+      },
+      "h6": {
+        "forecasts": 54,
+        "arima": {
+          "mae": 35.69,
+          "rmse": 49.8,
+          "mape": 8.08
+        },
+        "drift": {
+          "mae": 35.51,
+          "rmse": 49.85,
+          "mape": 8.05
+        },
+        "naive": {
+          "mae": 44.75,
+          "rmse": 58.3,
+          "mape": 10.41
+        },
+        "arima_80pct_interval_coverage": 0.611
+      },
+      "h12": {
+        "forecasts": 48,
+        "arima": {
+          "mae": 53.28,
+          "rmse": 70.93,
+          "mape": 11.57
+        },
+        "drift": {
+          "mae": 53.05,
+          "rmse": 70.44,
+          "mape": 11.54
+        },
+        "naive": {
+          "mae": 81.75,
+          "rmse": 98.67,
+          "mape": 18.38
+        },
+        "arima_80pct_interval_coverage": 0.646
+      }
+    }
+  }
+}

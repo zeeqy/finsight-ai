@@ -1,0 +1,98 @@
+{
+  "model": "Logistic Regression (standardised)",
+  "dataset": "Medical Cost Personal Datasets (insurance.csv)",
+  "rows": 1337,
+  "duplicates_dropped": 1,
+  "target": "annual charges > dataset median (USD 9,386.16)",
+  "positive_rate": 0.4996,
+  "split": "stratified 80/20, seed 42",
+  "cv_train": {
+    "roc_auc_mean": 0.9457,
+    "roc_auc_std": 0.0103,
+    "accuracy_mean": 0.9046
+  },
+  "test": {
+    "accuracy": 0.8993,
+    "roc_auc": 0.9532,
+    "precision": 0.8905,
+    "recall": 0.9104,
+    "f1": 0.9004,
+    "brier": 0.0766,
+    "confusion_matrix": {
+      "tn": 119,
+      "fp": 15,
+      "fn": 12,
+      "tp": 122
+    }
+  },
+  "baselines_test": {
+    "majority_class": {
+      "accuracy": 0.5,
+      "roc_auc": 0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "brier": 0.5
+    },
+    "smoker_only_rule": {
+      "accuracy": 0.7575,
+      "roc_auc": 0.7575,
+      "precision": 1.0,
+      "recall": 0.5149,
+      "f1": 0.6798,
+      "brier": 0.1656
+    },
+    "decision_tree_depth3": {
+      "accuracy": 0.9328,
+      "roc_auc": 0.9494,
+      "precision": 0.9833,
+      "recall": 0.8806,
+      "f1": 0.9291,
+      "brier": 0.0611
+    }
+  },
+  "thresholds": {
+    "low_max": 0.3,
+    "high_min": 0.7
+  },
+  "tiers_test": {
+    "Low": {
+      "share_of_people": 0.399,
+      "actual_higher_cost_rate": 0.075
+    },
+    "Medium": {
+      "share_of_people": 0.172,
+      "actual_higher_cost_rate": 0.261
+    },
+    "High": {
+      "share_of_people": 0.429,
+      "actual_higher_cost_rate": 0.991
+    }
+  },
+  "coefficients": {
+    "age": {
+      "coef_standardised": 2.183,
+      "odds_ratio_per_unit": 1.1681
+    },
+    "bmi": {
+      "coef_standardised": 0.1338,
+      "odds_ratio_per_unit": 1.0222
+    },
+    "smoker": {
+      "coef_standardised": 3.0986,
+      "odds_ratio_per_unit": 2619.2101
+    },
+    "children": {
+      "coef_standardised": 0.1541,
+      "odds_ratio_per_unit": 1.1342
+    }
+  },
+  "mean_abs_shap": {
+    "age": 1.8594,
+    "bmi": 0.1072,
+    "smoker": 2.7585,
+    "children": 0.1192
+  },
+  "shap_base_value": 0.4765,
+  "trained_at": "2026-10-28T13:13:34+00:00"
+}

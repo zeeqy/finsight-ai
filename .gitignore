@@ -1,0 +1,45 @@
+# ── Dependencies ──
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# ── Secrets: NEVER commit API keys / JWT secret ──
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# ── Personal financial data (real bank statements + local DB) ──
+server/data_store.json
+server/src/temp_uploads/
+Real Bank csv/
+**/Real Bank csv/
+*CASATIA*.csv
+
+# ── Build output / logs ──
+client/dist/
+dist/
+*.log
+npm-debug.log*
+
+# ── ML training data (large; download commands in ml-service/README.md) ──
+# The trained models in ml-service/models/*.pkl (about 4 MB) ARE committed: the server needs them.
+ml-service/data/raw/
+ml-service/data/processed/
+.ipynb_checkpoints/
+
+# ── OS / editor ──
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Real bank statement data used only for local evaluation (personal data)
+ml-service/data/private/
+
+# Server backups (real users' data)
+backups/
+*.sql.gz

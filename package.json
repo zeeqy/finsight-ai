@@ -1,0 +1,9 @@
+{
+  "name": "finsight-ai-builds",
+  "version": "1.0.0",
+  "description": "FinSight AI - An AI-Powered Personal Financial Management Web Application",
+  "scripts": {
+    "server": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev"
+  }
+}

@@ -1,0 +1,13 @@
+# HTTPS for FinSight: Caddy gets and renews a free Let's Encrypt certificate for DOMAIN by itself.
+{$DOMAIN} {
+	encode zstd gzip
+	# Statement uploads are at most 10 MB (Express also checks)
+	request_body {
+		max_size 12MB
+	}
+	reverse_proxy app:5000
+	log {
+		output stdout
+		format console
+	}
+}

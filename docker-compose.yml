@@ -1,0 +1,86 @@
+# FinSight AI - everything on one server: MySQL, the ML service, the web app (Express + React) and
+# Caddy for HTTPS. Only Caddy is reachable from the internet (ports 80 and 443).
+#   cp .env.production.example .env   (then fill it in)
+#   docker compose up -d --build
+# See DEPLOY.md for the full steps.
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: finsight_ai
+      MYSQL_USER: finsight
+      MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      TZ: Asia/Kuala_Lumpur
+    command: ["--default-time-zone=+08:00", "--max-connections=100"]
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  ml:
+    build: ./ml-service
+    restart: unless-stopped
+    # no ports: only the app container can reach it, at http://ml:8000
+
+  app:
+    build:
+      context: .
+      args:
+        VITE_CONTACT_EMAIL: ${CONTACT_EMAIL:-}
+        VITE_DATA_LOCATION: ${DATA_LOCATION:-}
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ml:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      TZ: Asia/Kuala_Lumpur
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      CORS_ORIGIN: https://${DOMAIN:?set DOMAIN in .env}
+      TRUST_PROXY: 1
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: finsight
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: finsight_ai
+      DB_FALLBACK: "off"
+      ML_SERVICE_URL: http://ml:8000
+      ALLOW_AI_SETTINGS: "false"
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODELS: ${GEMINI_MODELS:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ADVISOR_DAILY_LIMIT: ${ADVISOR_DAILY_LIMIT:-30}
+      REGISTER_MAX_PER_IP: ${REGISTER_MAX_PER_IP:-5}
+    volumes:
+      - uploads:/app/server/src/temp_uploads
+
+  caddy:
+    image: caddy:2.10
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  mysql-data:
+  uploads:
+  caddy-data:
+  caddy-config:

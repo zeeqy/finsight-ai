@@ -1,0 +1,1401 @@
+{
+  "summary": {
+    "run_at": "2026-11-05T09:42:37.732Z",
+    "total": 139,
+    "pass": 139,
+    "fail": 0,
+    "blocked": 0
+  },
+  "results": [
+    {
+      "id": "TC01",
+      "module": "Authentication & security",
+      "title": "Register a new user",
+      "input": "Valid name, email, password, income, age",
+      "expected": "201 + JWT + user in DB",
+      "actual": "201, JWT returned, user row exists",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "AUTH-01",
+      "module": "Authentication & security",
+      "title": "Password is stored hashed",
+      "input": "Inspect users row from TC01",
+      "expected": "bcrypt hash, not the password",
+      "actual": "bcrypt hash stored",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "AUTH-02",
+      "module": "Authentication & security",
+      "title": "Duplicate email rejected",
+      "input": "Register the same email again",
+      "expected": "409",
+      "actual": "409",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "AUTH-03",
+      "module": "Authentication & security",
+      "title": "Missing fields rejected",
+      "input": "Register with no password",
+      "expected": "400",
+      "actual": "400",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "AUTH-04",
+      "module": "Authentication & security",
+      "title": "Invalid email format rejected",
+      "input": "Email \"not-an-email\"",
+      "expected": "400",
+      "actual": "400",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "AUTH-05",
+      "module": "Authentication & security",
+      "title": "Very short password rejected",
+      "input": "Password \"a\"",
+      "expected": "400",
+      "actual": "400",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC02",
+      "module": "Authentication & security",
+      "title": "Login with wrong password",
+      "input": "Correct email, wrong password",
+      "expected": "401",
+      "actual": "401",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "AUTH-06",
+      "module": "Authentication & security",
+      "title": "Login with correct password",
+      "input": "Valid credentials",
+      "expected": "200 + JWT valid for 24h",
+      "actual": "200, token lifetime 24h",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "AUTH-07",
+      "module": "Authentication & security",
+      "title": "SQL injection in login",
+      "input": "Email \"' OR 1=1 -- \"",
+      "expected": "401, no login",
+      "actual": "401",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "AUTH-08",
+      "module": "Authentication & security",
+      "title": "Protected route with no token",
+      "input": "GET /api/auth/me without token",
+      "expected": "401",
+      "actual": "401",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "AUTH-09",
+      "module": "Authentication & security",
+      "title": "Tampered token",
+      "input": "Token signed with another secret",
+      "expected": "403",
+      "actual": "403",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "AUTH-10",
+      "module": "Authentication & security",
+      "title": "Expired token",
+      "input": "Valid signature, expired 1 hour ago",
+      "expected": "403",
+      "actual": "403",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "AUTH-11",
+      "module": "Authentication & security",
+      "title": "Data isolation between users",
+      "input": "User B reads, edits and deletes user A's records",
+      "expected": "B sees nothing; every write 404",
+      "actual": "B lists nothing; all 8 writes 404; bulk delete removed nothing",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "GEN-01",
+      "module": "Authentication & security",
+      "title": "Unknown API route",
+      "input": "GET /api/nope",
+      "expected": "404 JSON",
+      "actual": "404 JSON",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "GEN-02",
+      "module": "Authentication & security",
+      "title": "Health endpoint",
+      "input": "GET /api/health",
+      "expected": "mysql + ml_service online",
+      "actual": "mysql, ml_service online",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "GEN-03",
+      "module": "Authentication & security",
+      "title": "MySQL down",
+      "input": "Express with MySQL unreachable",
+      "expected": "Falls back to JSON store; Modules 3-5 return a clear 503, no crash",
+      "actual": "health=local_resilient_store, goals/loan/insurance all 503",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC03",
+      "module": "M1 Spend Analyser",
+      "title": "Upload a valid Bank Islam CSV",
+      "input": "CASATIA CSV, 5 rows",
+      "expected": "201, 5 rows categorised, summary updates",
+      "actual": "201, 5 inserted, ML engine; summary spend RM 300.00, inflow RM 2,500.00",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-01",
+      "module": "M1 Spend Analyser",
+      "title": "Categories on known merchants",
+      "input": "TC03 rows",
+      "expected": "Income, Food & Dining, Transport, Groceries, Utilities",
+      "actual": "All 5 correct",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-02",
+      "module": "M1 Spend Analyser",
+      "title": "KPIs from hand calculation",
+      "input": "Income RM 3,000, spend RM 300",
+      "expected": "Left RM 2,700, savings rate 90%, top Groceries",
+      "actual": "RM 2,700, 90%, Groceries",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC04",
+      "module": "M1 Spend Analyser",
+      "title": "Upload a .jpg",
+      "input": "photo.jpg",
+      "expected": "422, nothing saved",
+      "actual": "422, row count unchanged",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-03",
+      "module": "M1 Spend Analyser",
+      "title": "Empty and non-bank CSVs",
+      "input": "Empty file; CSV with no amount column",
+      "expected": "422, no statement record",
+      "actual": "422 both, no statement rows",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-04",
+      "module": "M1 Spend Analyser",
+      "title": "File over 10 MB",
+      "input": "10.5 MB CSV",
+      "expected": "413",
+      "actual": "413",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-05",
+      "module": "M1 Spend Analyser",
+      "title": "Date and amount formats",
+      "input": "DD/MM/YYYY date; \"RM1,234.56\"; plain \"2026-10-20\"",
+      "expected": "Parsed exactly, no day shift",
+      "actual": "RM 1,234.56 on 5 Oct, RM 10.50 on 20 Oct",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-06",
+      "module": "M1 Spend Analyser",
+      "title": "Separate Debit and Credit columns",
+      "input": "Row: Debit 50.00, Credit blank; row: Debit blank, Credit 200.00",
+      "expected": "Spending RM 50, Income RM 200",
+      "actual": "Spend RM 50, inflow RM 200",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-07",
+      "module": "M1 Spend Analyser",
+      "title": "Debit/Credit columns filled with 0.00",
+      "input": "Row: Debit 50.00, Credit 0.00; row: Debit 0.00, Credit 200.00",
+      "expected": "Spending RM 50, Income RM 200",
+      "actual": "Spend RM 50, inflow RM 200",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-08",
+      "module": "M1 Spend Analyser",
+      "title": "Debit whose description says \"credit\"",
+      "input": "Bank Islam row \"CREDIT CARD PAYMENT\", -RM500.00",
+      "expected": "Counts as spending, not Income",
+      "actual": "Stored as Others",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-09",
+      "module": "M1 Spend Analyser",
+      "title": "Same statement uploaded twice",
+      "input": "Upload the same CSV again",
+      "expected": "Totals do not double (rows skipped, user told)",
+      "actual": "0 added, 5 skipped; spend stays RM 300.00",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-22",
+      "module": "M1 Spend Analyser",
+      "title": "Identical purchases in one statement",
+      "input": "Two RM 2.00 parking rows, same day",
+      "expected": "Both kept",
+      "actual": "Both kept",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-23",
+      "module": "M1 Spend Analyser",
+      "title": "Overlapping statements",
+      "input": "Second CSV repeats 1 row and adds 1 new row",
+      "expected": "Only the new row is added",
+      "actual": "1 added, 1 skipped, 3 rows in total",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-24",
+      "module": "M1 Spend Analyser",
+      "title": "Signed money-in that mentions credit",
+      "input": "Bank Islam row \"CREDIT TRANSFER\", +RM100.00; unsigned Amount column row \"SALARY CREDIT\"",
+      "expected": "Both count as money in",
+      "actual": "RM 100 money in",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-10",
+      "module": "M1 Spend Analyser",
+      "title": "Anomaly flagged",
+      "input": "Six purchases around RM 50, one RM 500, same merchant",
+      "expected": "Only the RM 500 flagged",
+      "actual": "Only RM 500 flagged",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-11",
+      "module": "M1 Spend Analyser",
+      "title": "Materiality floor",
+      "input": "Six around RM 100, one RM 105 (huge Z, only 5% higher)",
+      "expected": "Nothing flagged",
+      "actual": "Nothing flagged",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-12",
+      "module": "M1 Spend Analyser",
+      "title": "Fewer than 5 peers",
+      "input": "Four purchases then RM 500",
+      "expected": "Nothing flagged",
+      "actual": "Nothing flagged",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-13",
+      "module": "M1 Spend Analyser",
+      "title": "Recategorise a transaction",
+      "input": "Change one row to Shopping",
+      "expected": "Category updated, source \"user\", summary moves",
+      "actual": "Shopping, source user, summary moved",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-14",
+      "module": "M1 Spend Analyser",
+      "title": "Delete one, delete selected",
+      "input": "Single delete then bulk delete of 2",
+      "expected": "Row count falls by 3",
+      "actual": "5 → 2 rows",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-15",
+      "module": "M1 Spend Analyser",
+      "title": "Clear a month, clear all",
+      "input": "Two months of data",
+      "expected": "Only the chosen month goes; clear all empties",
+      "actual": "Month cleared alone, then all cleared",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-16",
+      "module": "M1 Spend Analyser",
+      "title": "Script and SQL text in a description",
+      "input": "\"<script>alert(1)</script>'; DROP TABLE transactions;--\"",
+      "expected": "Stored as plain text, table intact",
+      "actual": "Stored verbatim, table intact",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-17",
+      "module": "M1 Spend Analyser",
+      "title": "ML service down during upload",
+      "input": "Upload with the ML service unreachable",
+      "expected": "201 using keyword rules",
+      "actual": "201, engine rules",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-25",
+      "module": "M1 Spend Analyser",
+      "title": "XLSX statement with a preamble",
+      "input": "Excel file: 3 lines of account details, then Date/Description/Amount, 2 rows",
+      "expected": "201, 2 rows, dates and signs right",
+      "actual": "201, 2 rows; 5 Oct kept; salary as Income; broken file 422",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-26",
+      "module": "M1 Spend Analyser",
+      "title": "Add a transaction by hand",
+      "input": "Cash RM 12.50 \"nasi lemak\", no category; RM 50 money in; future date; RM 0",
+      "expected": "Saved and categorised; future date and RM 0 rejected",
+      "actual": "201 as Food & Dining; money in as Income; future date and RM 0 give 422",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-27",
+      "module": "M1 Spend Analyser",
+      "title": "Recurring payments and forecast",
+      "input": "4 months: Netflix RM 54.90 on the 5th, TNB bill varying, groceries varying",
+      "expected": "Netflix fixed, TNB bill, groceries not recurring; forecast for next month; hide works",
+      "actual": "Netflix fixed, TNB bill, Lotus's not recurring; Oct forecast RM 437.5; hidden after dismiss",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-28",
+      "module": "M1 Spend Analyser",
+      "title": "Locked PDF e-statement",
+      "input": "Made-up PDF, password-locked: 5 rows, opening RM 200; no password, wrong password, preview, import, preview again",
+      "expected": "422 asks for password; wrong one rejected; preview saves nothing and every row matches the balance; import adds 5; second preview finds 0 new",
+      "actual": "Password asked, wrong one 422; preview: 5 rows, 5/5 match balance, closing matches, nothing saved; import 201 +5; again 0 new",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-29",
+      "module": "M1 Spend Analyser",
+      "title": "Broken or scanned PDF",
+      "input": "A .pdf that is not a PDF; a PDF with no transaction table",
+      "expected": "422 with a clear message, nothing saved",
+      "actual": "Both 422 with a message; nothing saved",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-30",
+      "module": "M1 Spend Analyser",
+      "title": "Same month as CSV and PDF",
+      "input": "Oct 2026 as a CSV (4 rows), then the same Oct as a PDF worded differently plus 1 new row; then a Jul 2026 CSV",
+      "expected": "PDF preview finds 4 already imported from another file and 1 new; import adds 1; the Jul upload reports Jul as its month, not the latest month",
+      "actual": "Preview: 4 already imported (from another file), 1 new; import +1, 5 rows stored; Jul upload focuses Jul 2026",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-18",
+      "module": "M1 Budgets",
+      "title": "Create and update a budget",
+      "input": "Set Transport to 300, then 450",
+      "expected": "One row, limit 450",
+      "actual": "One row, RM 450",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-19",
+      "module": "M1 Budgets",
+      "title": "Custom category budget",
+      "input": "Budget for \"Takaful\"",
+      "expected": "Saved",
+      "actual": "Saved",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-20",
+      "module": "M1 Budgets",
+      "title": "Invalid budget",
+      "input": "No limit; negative limit",
+      "expected": "Both rejected",
+      "actual": "Both rejected",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-21",
+      "module": "M1 Budgets",
+      "title": "Delete a budget",
+      "input": "Delete Takaful",
+      "expected": "Removed",
+      "actual": "Removed",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "ADV-01",
+      "module": "M2 AI Advisor",
+      "title": "Advisor context matches the DB",
+      "input": "User with RM 300 spending in Oct 2026",
+      "expected": "Context shows RM 300, income RM 4,000, October 2026",
+      "actual": "October 2026, RM 300 of RM 4000",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "ADV-02",
+      "module": "M2 AI Advisor",
+      "title": "Goals and checks reach the context",
+      "input": "Add a goal, a loan check and an insurance check",
+      "expected": "All three appear in the context",
+      "actual": "1 goal RM 200/mo, loan Affordable, insurance Low",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "ADV-03",
+      "module": "M2 AI Advisor",
+      "title": "Empty message",
+      "input": "Blank chat message",
+      "expected": "400",
+      "actual": "400",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "ADV-04",
+      "module": "M2 AI Advisor",
+      "title": "Offline fallback",
+      "input": "No LLM key configured; ask about spending",
+      "expected": "Answers from keyword rules using real figures",
+      "actual": "Provider local; reply quotes RM 300.00",
+      "status": "PASS",
+      "detail": "### 📊 Monthly Spending Breakdown for Test adv\n\n• **Income:** RM 4,000.00\n• **Total Spending:** RM 300.00\n• **Net Savings:** RM 3,700.00\n\nYour largest expense category is **Groceries**.\n\n**Category Distribution:**\n- **Groceries:** RM 120.25 (40.1% of spend, 1 txns)\n- **Utilities:** RM 101.25 (33.8% of spend, 1 txns)\n- **Transport:** RM 50.00 (16.7% of spend, 1 txns)\n- **Food & Dining:** RM 28.50 (9.5% of spend, 1 txns)\n\n**Pacing Assessment:**\n🌟 **Excellent Financial Discipline:** You have only spent **7.5%** of your monthly income. You are retaining a solid surplus!"
+    },
+    {
+      "id": "ADV-05",
+      "module": "M2 AI Advisor",
+      "title": "History saved and cleared",
+      "input": "After ADV-04",
+      "expected": "Messages listed, then empty",
+      "actual": "2 messages, then 0",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "ADV-06",
+      "module": "M2 AI Advisor",
+      "title": "AI key settings locked",
+      "input": "POST settings with ALLOW_AI_SETTINGS off",
+      "expected": "403, canEdit false",
+      "actual": "403, canEdit false",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC05",
+      "module": "M3 Loan Predictor",
+      "title": "DSR with no new loan",
+      "input": "Income RM 5,000, commitments RM 2,500",
+      "expected": "DSR 50%, Moderate",
+      "actual": "50%, Moderate (service-level: the form always has a new loan)",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC05b",
+      "module": "M3 Loan Predictor",
+      "title": "Car loan, effective rate",
+      "input": "RM 80,000, 10% down, 5.5% effective, 9 yrs",
+      "expected": "Loan 72,000, 846.72/mo, interest 19,445.74, total 91,445.74, reducing balance",
+      "actual": "All four figures exact, reducing balance",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC05b-F",
+      "module": "M3 Loan Predictor",
+      "title": "Car loan quoted flat (before 1 Jun 2026)",
+      "input": "Same car, 3% flat, 9 yrs",
+      "expected": "846.67/mo, interest 19,440, effective rate 5.5%, tip explains the law",
+      "actual": "RM 846.67, same as 5.5% effective; tip names the 1 Jun 2026 change",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC05c",
+      "module": "M3 Loan Predictor",
+      "title": "House reducing-balance loan",
+      "input": "RM 400,000, 10% down, 4.5%, 30 yrs, income 6,000, commitments 1,000",
+      "expected": "1,824.07/mo, DSR ≈ 47%, Moderate",
+      "actual": "RM 1,824.07, DSR 47.07%, Moderate",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-01",
+      "module": "M3 Loan Predictor",
+      "title": "Personal loan quoted flat",
+      "input": "RM 20,000, 6.5% flat, 5 yrs",
+      "expected": "Interest 6,500, total 26,500, 441.67/mo",
+      "actual": "All exact",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-02",
+      "module": "M3 Loan Predictor",
+      "title": "Repayment schedule adds up",
+      "input": "House and car loans",
+      "expected": "Principal sums to the loan; last balance 0",
+      "actual": "Both add up",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-03",
+      "module": "M3 Loan Predictor",
+      "title": "Full assessment saved",
+      "input": "Predict a personal loan",
+      "expected": "Saved with XGBoost source, verdict, tips",
+      "actual": "XGBoost p=0.069, Low, verdict Affordable",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-04",
+      "module": "M3 Loan Predictor",
+      "title": "Out-of-range loan is reference only",
+      "input": "30-year house loan",
+      "expected": "Score not used in verdict; stored as not counted",
+      "actual": "Reference only; verdict Affordable from DSR 15.2%",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC11",
+      "module": "M3 Loan Predictor",
+      "title": "Car loan pushes DSR above 70%",
+      "input": "Income RM 2,000, commitments RM 600, RM 846.72/mo",
+      "expected": "Warning + Not Recommended",
+      "actual": "DSR 72.34%, Not Recommended, warning shown",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-05",
+      "module": "M3 Loan Predictor",
+      "title": "Delete from history",
+      "input": "Delete a saved assessment",
+      "expected": "Removed",
+      "actual": "Removed",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-06",
+      "module": "M3 Loan Predictor",
+      "title": "ML service down",
+      "input": "Predict with ML service unreachable",
+      "expected": "Works with a labelled rule-based score",
+      "actual": "rule_based, labelled",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-07",
+      "module": "M3 Loan Predictor",
+      "title": "Tenure above the maximum",
+      "input": "Car, 10 years (max 9)",
+      "expected": "422 with a message",
+      "actual": "422: Maximum tenure for a car loan is 9 years.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-08",
+      "module": "M3 Loan Predictor",
+      "title": "Unknown loan type",
+      "input": "loan_type \"boat\"",
+      "expected": "422 with a message",
+      "actual": "422: Loan type must be personal, car or house.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-09",
+      "module": "M3 Loan Predictor",
+      "title": "Down payment above the price",
+      "input": "Price 80,000, down 90,000",
+      "expected": "422 with a message",
+      "actual": "422: Down payment cannot exceed the item price.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-10",
+      "module": "M3 Loan Predictor",
+      "title": "Zero income",
+      "input": "monthly_income 0",
+      "expected": "422 with a message",
+      "actual": "422: Monthly net income must be greater than 0.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-11",
+      "module": "M3 Loan Predictor",
+      "title": "Negative interest rate",
+      "input": "interest_rate -3",
+      "expected": "422 with a message",
+      "actual": "422: Interest rate must be a non-negative number.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-12",
+      "module": "M3 Loan Predictor",
+      "title": "Zero tenure",
+      "input": "tenure_years 0",
+      "expected": "422 with a message",
+      "actual": "422: Tenure (years) must be greater than 0.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-13",
+      "module": "M3 Loan Predictor",
+      "title": "Zero personal loan amount",
+      "input": "loan_amount 0",
+      "expected": "422 with a message",
+      "actual": "422: Loan amount must be greater than 0.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-14",
+      "module": "M3 Loan Predictor",
+      "title": "Negative commitments",
+      "input": "existing_commitments -500",
+      "expected": "422 with a message",
+      "actual": "422: Existing commitments must be a non-negative number.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M3-15",
+      "module": "M3 Loan Predictor",
+      "title": "House loan entered as flat rate",
+      "input": "interest_method \"flat\"",
+      "expected": "422 with a message",
+      "actual": "422: Housing loans are charged on a reducing balance, not a flat rate.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC08",
+      "module": "M4 Life Goals",
+      "title": "Haji goal, piggybank",
+      "input": "Target RM 23,500, 60 months, RM 0 saved",
+      "expected": "RM 391.67/month",
+      "actual": "RM 391.67, On Track",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC09",
+      "module": "M4 Life Goals",
+      "title": "Kahwin beyond the surplus",
+      "input": "Needs RM 1,500/mo for 24 months, surplus RM 800",
+      "expected": "Not Feasible + date 45 months away",
+      "actual": "RM 1,500, Not Feasible, adjusted to 2030-08-05",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-01",
+      "module": "M4 Life Goals",
+      "title": "Feasibility boundaries",
+      "input": "Surplus RM 800: ratio 0.5, 1.0, just above 1.0",
+      "expected": "On Track, At Risk, Not Feasible",
+      "actual": "On Track, At Risk, Not Feasible",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-17",
+      "module": "M4 Life Goals",
+      "title": "Goals share the surplus",
+      "input": "Surplus RM 800: goal due in 12 months needs RM 400, goal due in 24 months needs RM 600",
+      "expected": "Second goal gets RM 400 now, At Risk, catches up after the first ends",
+      "actual": "Second: RM 400 free now, At Risk, catches up",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-18",
+      "module": "M4 Life Goals",
+      "title": "Commitments lower the surplus",
+      "input": "Income RM 3,000, no statements, RM 500 car loan saved",
+      "expected": "Surplus RM 2,500, DSR 16.67%, loan form prefilled",
+      "actual": "Surplus RM 2500, DSR 16.67%, prefill RM 500",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-02",
+      "module": "M4 Life Goals",
+      "title": "Growth formula",
+      "input": "Target RM 100,000, 120 months, 6% p.a.",
+      "expected": "RM 610.21/month (sinking fund table)",
+      "actual": "RM 610.21",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-03",
+      "module": "M4 Life Goals",
+      "title": "Surplus uses real spending",
+      "input": "Income RM 5,000, RM 3,000 spent in the latest month",
+      "expected": "Goal judged against RM 2,000",
+      "actual": "Ratio 0.50 (RM 1,000 / RM 2,000)",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-04",
+      "module": "M4 Life Goals",
+      "title": "Haji cost by income group",
+      "input": "Template for B40, M40, T20",
+      "expected": "RM 15,000, 23,500, 33,300",
+      "actual": "15000, 23500, 33300",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-05",
+      "module": "M4 Life Goals",
+      "title": "Invalid income group",
+      "input": "income_group \"X\"",
+      "expected": "422",
+      "actual": "422",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-06",
+      "module": "M4 Life Goals",
+      "title": "Contribution updates progress",
+      "input": "RM 2,350 into the RM 23,500 Haji goal",
+      "expected": "Saved RM 2,350, 10%, lower monthly",
+      "actual": "Saved RM 2,350, 10%, now RM 352.5/mo",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-07",
+      "module": "M4 Life Goals",
+      "title": "Edit a goal",
+      "input": "Move the target date 10 years out",
+      "expected": "Monthly falls to match",
+      "actual": "RM 176.25/mo",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-08",
+      "module": "M4 Life Goals",
+      "title": "Pause, resume, delete",
+      "input": "Status changes on a goal",
+      "expected": "Status follows; goal removed",
+      "actual": "Paused, resumed, deleted",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-09",
+      "module": "M4 Life Goals",
+      "title": "Date in the past",
+      "input": "target_date 2020-01-01",
+      "expected": "422",
+      "actual": "422",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-10",
+      "module": "M4 Life Goals",
+      "title": "Unknown goal type",
+      "input": "goal_type \"yacht\"",
+      "expected": "422",
+      "actual": "422",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-11",
+      "module": "M4 Life Goals",
+      "title": "Zero target",
+      "input": "target_amount 0",
+      "expected": "422",
+      "actual": "422",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-12",
+      "module": "M4 Life Goals",
+      "title": "Zero contribution",
+      "input": "amount 0",
+      "expected": "422",
+      "actual": "422",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-13",
+      "module": "M4 Life Goals",
+      "title": "Compare savings options",
+      "input": "RM 50,000 over 60 months",
+      "expected": "All 5 options; higher rate needs less per month; gold uses the forecast",
+      "actual": "Piggybank RM 833.33; gold at cautious 3.58%",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-14",
+      "module": "M4 Life Goals",
+      "title": "Gold with the ML service down",
+      "input": "Simulate with ML service unreachable",
+      "expected": "Placeholder rate with a note, no error",
+      "actual": "Placeholder 5%, note shown",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC10",
+      "module": "M4 Life Goals",
+      "title": "House loan check",
+      "input": "RM 400,000, 10% down, 4.5%, 30 yrs, income 6,000, debt 1,000",
+      "expected": "≈ RM 1,824/mo, DSR ≈ 47%",
+      "actual": "RM 1824.07, DSR 47.07%",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-15",
+      "module": "M4 Life Goals",
+      "title": "Car loan check uses an effective rate",
+      "input": "RM 80,000, 10% down, 5.5%, 9 yrs",
+      "expected": "RM 846.72/mo, reducing balance",
+      "actual": "RM 846.72, reducing balance",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-16",
+      "module": "M4 Life Goals",
+      "title": "Loan check on a non-loan goal",
+      "input": "goal_type kahwin",
+      "expected": "422",
+      "actual": "422",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC06",
+      "module": "M5 Insurance",
+      "title": "High-risk profile",
+      "input": "Age 55, smoker, BMI 35",
+      "expected": "High Risk + SHAP values",
+      "actual": "High, score 0.9999, 4 SHAP factors",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "TC07",
+      "module": "M5 Insurance",
+      "title": "Low-risk profile",
+      "input": "Age 25, non-smoker, BMI 22",
+      "expected": "Low Risk",
+      "actual": "Low, score 0.0274",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-01",
+      "module": "M5 Insurance",
+      "title": "SHAP values add up",
+      "input": "TC06 result",
+      "expected": "Base + contributions = the score",
+      "actual": "Recomputed 0.9999 vs 0.9999",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-02",
+      "module": "M5 Insurance",
+      "title": "What-if scenarios",
+      "input": "TC06 (smoker, BMI 35)",
+      "expected": "Quit, BMI and both; quitting lowers the score",
+      "actual": "Quit smoking, BMI down to 22.9, Both",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-03",
+      "module": "M5 Insurance",
+      "title": "BMI and Asian categories",
+      "input": "170 cm: 65 kg, 67 kg, 80 kg",
+      "expected": "22.5 Normal, 23.2 Overweight, 27.7 Obese",
+      "actual": "22.5 Normal, 23.2 Overweight, 27.7 Obese",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-04",
+      "module": "M5 Insurance",
+      "title": "Saved with SHAP values",
+      "input": "After TC06",
+      "expected": "Row holds score, tier, SHAP JSON",
+      "actual": "Saved",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-05",
+      "module": "M5 Insurance",
+      "title": "Delete from history",
+      "input": "Delete one",
+      "expected": "Removed",
+      "actual": "Removed",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-06",
+      "module": "M5 Insurance",
+      "title": "Age below the range",
+      "input": "Age 17",
+      "expected": "422",
+      "actual": "422: Age must be between 18 and 64 (the range the model was trained on).",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-07",
+      "module": "M5 Insurance",
+      "title": "Age above the range",
+      "input": "Age 65",
+      "expected": "422",
+      "actual": "422: Age must be between 18 and 64 (the range the model was trained on).",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-08",
+      "module": "M5 Insurance",
+      "title": "Impossible height",
+      "input": "Height 50 cm",
+      "expected": "422",
+      "actual": "422: Height must be between 120 and 230 cm.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-09",
+      "module": "M5 Insurance",
+      "title": "Impossible weight",
+      "input": "Weight 5 kg",
+      "expected": "422",
+      "actual": "422: Weight must be between 30 and 250 kg.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-10",
+      "module": "M5 Insurance",
+      "title": "Missing age",
+      "input": "No age",
+      "expected": "422",
+      "actual": "422: Age must be between 18 and 64 (the range the model was trained on).",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-11",
+      "module": "M5 Insurance",
+      "title": "ML service down",
+      "input": "Predict with ML service unreachable",
+      "expected": "503 with a clear message, nothing saved",
+      "actual": "503: The insurance risk model is unavailable right now (ML service offline). Please try again later.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "HC-01",
+      "module": "Health Check & decisions",
+      "title": "Health index from statements",
+      "input": "Income RM 5,000, spend RM 2,000/month, no debts, no goals, savings not given",
+      "expected": "Scored on 3 parts, savings listed as missing",
+      "actual": "Score 83 (Healthy), 3 parts, savings missing",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "HC-02",
+      "module": "Health Check & decisions",
+      "title": "Emergency savings and household saved",
+      "input": "RM 12,000 savings, single; then -5 and an unknown household",
+      "expected": "Saved, savings part scored (6 months = 25); bad values 422",
+      "actual": "6 months of cover, 25/25; bad values 422",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "HC-03",
+      "module": "Health Check & decisions",
+      "title": "Simulate a car loan",
+      "input": "TC05b car loan against the profile",
+      "expected": "Instalment RM 846.72, surplus falls by it, down payment leaves savings",
+      "actual": "Tight; surplus RM 3000 to RM 2153.28; 4 reasons",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "HC-04",
+      "module": "Health Check & decisions",
+      "title": "A decision that leaves the user short",
+      "input": "Monthly commitment of RM 4,000 on RM 3,000 surplus",
+      "expected": "Risky, the shortfall is the first reason",
+      "actual": "Risky: \"You would be RM 1,000 short every month (left over falls from RM 3,000).\"",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "HC-05",
+      "module": "Health Check & decisions",
+      "title": "Invalid decisions",
+      "input": "Unknown type; boat loan; RM 0 purchase",
+      "expected": "All 422",
+      "actual": "422, 422, 422",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "HC-10",
+      "module": "Health Check & decisions",
+      "title": "Income drop (resilience)",
+      "input": "No income for 3 months, then for 12 months; RM 12,000 savings, RM 2,000 a month out; then 0% and 30 months",
+      "expected": "Savings cover 6 months: 3 months Tight with RM 6,000 left, 12 months Risky; bad input 422",
+      "actual": "3 months: Tight, RM 6,000 left; 12 months: Risky; bad input 422",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "HC-06",
+      "module": "Health Check & decisions",
+      "title": "Zakat",
+      "input": "Savings RM 60,000, income RM 30,000, official nisab RM 42,047",
+      "expected": "Savings RM 1,500, income RM 0 (below nisab)",
+      "actual": "RM 1,500 on savings, RM 0 on income; gold nisab RM 48029.25",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "HC-07",
+      "module": "Health Check & decisions",
+      "title": "Debt payoff plan",
+      "input": "Card RM 6,000 at 18% (RM 300/mo), PTPTN RM 1,500 at 1% (RM 100/mo), RM 200 extra",
+      "expected": "Avalanche no dearer than snowball; both beat minimum payments",
+      "actual": "Avalanche RM 675.33 in 14 mo; snowball RM 791.86; minimum RM 1197.05 in 24 mo",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "HC-08",
+      "module": "Health Check & decisions",
+      "title": "Loan check includes affordability",
+      "input": "TC05b through /api/loan/predict",
+      "expected": "Response has the simulator result with the same instalment",
+      "actual": "Affordability: Tight",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "HC-09",
+      "module": "Health Check & decisions",
+      "title": "Protection check",
+      "input": "2 dependants, 10 years, RM 50,000 cover; RM 12,000 savings, RM 7,500 debts saved; then 0 years",
+      "expected": "Emergency 6 months; need = income x 120 + debts; gap = need - savings - cover; bad years 422",
+      "actual": "6 months cover; need RM 607500, gap RM 545500",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "SEC-01",
+      "module": "Authentication & security",
+      "title": "Login limit",
+      "input": "5 wrong passwords for one account, then the right one",
+      "expected": "6th attempt 429 with a wait message; another account still signs in",
+      "actual": "429: Too many sign-in attempts. Wait 15 minutes and try again.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "SEC-02",
+      "module": "Authentication & security",
+      "title": "Download my data",
+      "input": "User with a transaction, a commitment and a quote",
+      "expected": "200 JSON attachment with every table, no password hash",
+      "actual": "15 tables exported, no password hash",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "SEC-03",
+      "module": "Authentication & security",
+      "title": "Delete my account",
+      "input": "Wrong password, then the right one",
+      "expected": "422 and nothing removed; then 200, all rows gone, sign-in fails",
+      "actual": "Wrong password 422; deleted with every row; sign-in 401",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "SEC-04",
+      "module": "Authentication & security",
+      "title": "Edit my profile",
+      "input": "Name, income RM 5,250.50, age 30, M40, single with a car; then bad values",
+      "expected": "200 with the new values, the financial profile uses the new income; empty name, age 12 and unknown household 422",
+      "actual": "Saved; surplus uses RM 5,250.50; 4 bad inputs 422",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "SEC-05",
+      "module": "Authentication & security",
+      "title": "Change my password",
+      "input": "Wrong current password, a 3-character new one, then a valid change",
+      "expected": "422, 422, then 200; the old password no longer signs in, the new one does",
+      "actual": "Old password 401, new password 200",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-31",
+      "module": "M1 Spend Analyser",
+      "title": "Month in review",
+      "input": "Sep: groceries RM 200; Oct: groceries RM 450, transport RM 80",
+      "expected": "Spend up RM 330; groceries the biggest mover; first month has no comparison",
+      "actual": "You spent RM 330 more than in September: RM 530 against RM 200. Groceries up RM 250 (RM 200 to RM 450). Transport: RM 80, new this month.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-32",
+      "module": "M1 Spend Analyser",
+      "title": "Dates without a time-zone shift",
+      "input": "Transaction on 1 Oct 2026",
+      "expected": "Ledger returns \"2026-10-01\" (not 30 Sep 16:00 UTC)",
+      "actual": "txn_date 2026-10-01",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-19",
+      "module": "M4 Life Goals",
+      "title": "Savings found in statements",
+      "input": "Tabung Haji goal; RM 200 transfer to LEMBAGA TABUNG HAJI today",
+      "expected": "Offered once; adding raises saved by RM 200; a second answer 409",
+      "actual": "Offered once, added RM 200, second answer 409",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M4-20",
+      "module": "M4 Life Goals",
+      "title": "House and car purchase costs",
+      "input": "House RM 400,000, 10% down; first home due 2027 vs 2029; car 1,500cc",
+      "expected": "Stamp duty RM 8,800, legal fees RM 9,500; RM 0 by 2027, full after; road tax RM 90",
+      "actual": "RM 8,800 + RM 9,500; first home RM 0 by 2027; road tax RM 90",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-12",
+      "module": "M5 Insurance",
+      "title": "Add quotes",
+      "input": "Two medical cards, one life plan; a medical quote with no annual limit",
+      "expected": "201 x3; 422 with a message",
+      "actual": "3 saved; invalid: Enter the annual limit.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-13",
+      "module": "M5 Insurance",
+      "title": "Compare quotes",
+      "input": "Example bill RM 20,000, 2 dependants",
+      "expected": "B: RM 150/mo, pays RM 2,900 on the bill; premiums compared within a plan type only; life gap closed",
+      "actual": "Lowest premium for medical card: Operator B, RM 150.00 a month. Least to pay yourself on the example bill: Insurer A, RM 0.00.",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M5-14",
+      "module": "M5 Insurance",
+      "title": "Quote limit and removal",
+      "input": "Fill to 6 quotes, add a 7th; remove one",
+      "expected": "7th 422; delete 200 then 404",
+      "actual": "7th refused; removed once, then 404",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "SEC-06",
+      "module": "Authentication & security",
+      "title": "Sign-up rules",
+      "input": "No terms box; age 17; then terms ticked and age 25",
+      "expected": "400 TERMS_REQUIRED, 422, then 201 with the acceptance time saved",
+      "actual": "Refused without the box and under 18; accepted with the time recorded",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "SEC-07",
+      "module": "Authentication & security",
+      "title": "Production settings",
+      "input": "NODE_ENV=production: headers, CORS from another site and from the real site, the web app, an unknown API path",
+      "expected": "CSP, HSTS, nosniff, no X-Powered-By; no CORS header for another site; web app at /; 404 JSON",
+      "actual": "Headers set, other sites refused, app served, 404 JSON",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "SEC-08",
+      "module": "Authentication & security",
+      "title": "Sign-up limit per visitor",
+      "input": "Limit 3 an hour: 4 sign-ups from one IP behind the proxy, then 1 from another IP",
+      "expected": "3 created, the 4th 429 TOO_MANY_SIGNUPS, another visitor still 201 (real IPs are used, not the proxy's)",
+      "actual": "3 then 429; another IP unaffected",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "SEC-09",
+      "module": "Authentication & security",
+      "title": "Advisor daily limit",
+      "input": "Limit 2 questions per 24 hours, no LLM key: three questions",
+      "expected": "Two answered, the third 429 ADVISOR_DAILY_LIMIT saying when to ask again",
+      "actual": "Third refused with a wait time",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "HC-11",
+      "module": "Health Check",
+      "title": "Emergency savings over time",
+      "input": "Set RM 1,000; add RM 500; take out RM 2,000; take out RM 200; undo; undo an older entry; profile save of RM 3,000",
+      "expected": "1,000 then 1,500; 422; 1,300 and the index uses it; undo back to 1,500; older undo 422; the profile save is logged as \"set\"; history in the data export",
+      "actual": "Balance 1,000, 1,500, 1,300, undo 1,500, set 3,000; 3 entries exported",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "ML-01",
+      "module": "ML service",
+      "title": "All models loaded",
+      "input": "GET /health",
+      "expected": "category, loan, gold, insurance true",
+      "actual": "All 4 loaded",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "ML-02",
+      "module": "ML service",
+      "title": "Rejects invalid input",
+      "input": "Empty description list; insurance with age 5",
+      "expected": "422",
+      "actual": "422 both",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "ML-03",
+      "module": "ML service",
+      "title": "Gold forecast shape",
+      "input": "GET /forecast/gold?months=12",
+      "expected": "Cautious < expected < optimistic; 80% band contains the median",
+      "actual": "-4.44% / 10.34% / 27.4%",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "ML-04",
+      "module": "ML service",
+      "title": "Batch categorisation",
+      "input": "3 descriptions",
+      "expected": "3 predictions with confidence 0-1",
+      "actual": "Food & Dining, Utilities, Personal Transfer",
+      "status": "PASS",
+      "detail": null
+    }
+  ]
+}

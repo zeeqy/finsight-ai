@@ -1,0 +1,67 @@
+set,description,category
+sample_statements,MAYBANK QR SHOPEE PAY TOPUP,Shopping
+sample_statements,GRAB CAR KL SENTRAL TO BANGSAR,Transport
+sample_statements,PETRONAS KESAS HIGHWAY FUEL,Transport
+sample_statements,MCDONALD'S DRIVE THRU MID VALLEY,Food & Dining
+sample_statements,TNB BILL PAYMENT ONLINE,Utilities
+sample_statements,JAYA GROCER THE GARDENS MALL,Groceries
+sample_statements,STARBUCKS COFFEE NU SENTRAL,Food & Dining
+sample_statements,UNIFI HOME BROADBAND 100MBPS,Utilities
+sample_statements,SHELL TTDI RON95 REFUEL,Transport
+sample_statements,SHOPEE MY ORDER 98214812,Shopping
+sample_statements,ZUS COFFEE LATTE & CROISSANT,Food & Dining
+sample_statements,KLINIK MEDIVIRON CONSULTATION,Healthcare
+sample_statements,NETFLIX SUBSCRIPTION PREMIUM,Entertainment
+sample_statements,GRAB FOOD RESTORAN MAJESTIC NASI KANDAR,Food & Dining
+sample_statements,IPHONE 16 PRO DOWNPAYMENT (ANOMALY),Shopping
+sample_statements,CIMB DEBIT RAPID KL LRT MONTHLY PASS,Transport
+sample_statements,TOUCH N GO EWALLET RELOAD,Transport
+sample_statements,KFC BUKIT BINTANG COMBO,Food & Dining
+sample_statements,MAXIS POSTPAID BILL,Utilities
+sample_statements,LOTUS HYPERMARKET WEEKLY GROCERIES,Groceries
+sample_statements,TEALIVE BUBBLE TEA,Food & Dining
+sample_statements,UNIQLO 1 UTAMA APPAREL,Shopping
+sample_statements,AIR SELANGOR UTILITY PAYMENT,Utilities
+unseen_merchants,RESTORAN HAJI TAPAH SEKSYEN 9 SHAH ALAM MY,Food & Dining
+unseen_merchants,KEDAI KOPI HAI KEE KUALA LUMPUR KULMY,Food & Dining
+unseen_merchants,WARUNG PAK MAT TOMYAM BANGI SELMY,Food & Dining
+unseen_merchants,THE ALLEY BUBBLE TEA SUNWAY PYRAMID,Food & Dining
+unseen_merchants,BEALIVE CAFE PUCHONG SELMY,Food & Dining
+unseen_merchants,SATE KAJANG HJ SAMURI KAJANG MY,Food & Dining
+unseen_merchants,FUEL STATION SENDAYAN SEREMBAN NS MY,Transport
+unseen_merchants,LRT KELANA JAYA LINE TOP UP,Transport
+unseen_merchants,PARKING SUNWAY VELOCITY CHERAS KL MY,Transport
+unseen_merchants,BAS RAPID PENANG PULAU PINANG MY,Transport
+unseen_merchants,TAYAR & SERVIS KERETA AH HOCK KLANG,Transport
+unseen_merchants,KEDAI RUNCIT AH SENG SG BULOH MY,Groceries
+unseen_merchants,PASARAYA ECONJAYA PUTRAJAYA MY,Groceries
+unseen_merchants,FRESH GROCER SEGAMBUT KUALA LUMPUR,Groceries
+unseen_merchants,BORONG BARANGAN BASAH KAJANG,Groceries
+unseen_merchants,NEW MAX MART AMPANG MY,Groceries
+unseen_merchants,PRIMARK ONLINE STORE,Shopping
+unseen_merchants,NAELOFAR HIJAB BOUTIQUE SHAH ALAM,Shopping
+unseen_merchants,BUKU FIXI KEDAI BUKU ONLINE,Shopping
+unseen_merchants,ELECTRONIC CITY GADGET STORE IPOH,Shopping
+unseen_merchants,KEDAI KASUT SPORT CORNER MELAKA,Shopping
+unseen_merchants,SABAH ELECTRICITY SDN BHD BILL PAYMENT,Utilities
+unseen_merchants,LEMBAGA AIR PERAK BIL AIR,Utilities
+unseen_merchants,ALLO TECHNOLOGY FIBRE BROADBAND,Utilities
+unseen_merchants,ONEXOX PREPAID RELOAD,Utilities
+unseen_merchants,KLINIK DR AZMAN 24 JAM KLANG,Healthcare
+unseen_merchants,HOSPITAL PAKAR AN-NUR HASANAH BANGI,Healthcare
+unseen_merchants,FARMASI ALIF SEKSYEN 13 SHAH ALAM,Healthcare
+unseen_merchants,PUSAT DIALISIS MAIWP,Healthcare
+unseen_merchants,AMAZON PRIME VIDEO MEMBERSHIP,Entertainment
+unseen_merchants,TIKTOK COINS RECHARGE,Entertainment
+unseen_merchants,FUNTASY HOUSE TRAMPOLINE PARK,Entertainment
+unseen_merchants,PADEL CLUB BOOKING SUBANG,Entertainment
+unseen_merchants,KOLEJ VOKASIONAL SHAH ALAM YURAN,Education
+unseen_merchants,AKADEMI AL-QURAN AMAN,Education
+unseen_merchants,UNIVERSITI ISLAM ANTARABANGSA FEES,Education
+unseen_merchants,CIKGU HANA TUITION CENTRE,Education
+unseen_merchants,NURUL IZZAH BINTI KAMAL DuitNow Transfer,Personal Transfer
+unseen_merchants,CHOO MEI XIN IBG TRANSFER,Personal Transfer
+unseen_merchants,RAVI A/L GOPAL FUND TRANSFER DUIT SEWA,Personal Transfer
+unseen_merchants,ATM WITHDRAWAL CDM BANK RAKYAT,Others
+unseen_merchants,TAKAFUL MALAYSIA CONTRIBUTION,Others
+unseen_merchants,MAJLIS AGAMA ISLAM ZAKAT FITRAH,Others

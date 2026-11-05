@@ -1,0 +1,221 @@
+{
+  "dataset": "Berka PKDD99 Czech bank (debits with a payee, plus cash and card withdrawals)",
+  "accounts": 4500,
+  "recurring": [
+    {
+      "window_months": 6,
+      "accounts": 4478,
+      "detector": {
+        "tp": 5815,
+        "fp": 27,
+        "fn": 88,
+        "precision": 0.9954,
+        "recall": 0.9851,
+        "f1": 0.9902
+      },
+      "baseline_3_payments": {
+        "tp": 5848,
+        "fp": 4763,
+        "fn": 55,
+        "precision": 0.5511,
+        "recall": 0.9907,
+        "f1": 0.7082
+      },
+      "recall_by_order_type": {
+        "SIPO": {
+          "total": 3496,
+          "found": 3487
+        },
+        " ": {
+          "total": 1378,
+          "found": 1369
+        },
+        "POJISTNE": {
+          "total": 531,
+          "found": 529
+        },
+        "UVER": {
+          "total": 498,
+          "found": 430
+        }
+      }
+    },
+    {
+      "window_months": 12,
+      "accounts": 4490,
+      "detector": {
+        "tp": 5827,
+        "fp": 2,
+        "fn": 117,
+        "precision": 0.9997,
+        "recall": 0.9803,
+        "f1": 0.9899
+      },
+      "baseline_3_payments": {
+        "tp": 5910,
+        "fp": 5024,
+        "fn": 34,
+        "precision": 0.5405,
+        "recall": 0.9943,
+        "f1": 0.7003
+      },
+      "recall_by_order_type": {
+        "SIPO": {
+          "total": 3498,
+          "found": 3493
+        },
+        " ": {
+          "total": 1378,
+          "found": 1375
+        },
+        "POJISTNE": {
+          "total": 531,
+          "found": 529
+        },
+        "UVER": {
+          "total": 537,
+          "found": 430
+        }
+      }
+    }
+  ],
+  "forecast": [
+    {
+      "history_months": 6,
+      "forecasts": 49947,
+      "methods": {
+        "naive": {
+          "mean_mase": 1.376,
+          "median_mase": 0.749,
+          "median_ape": 0.4086,
+          "mae_czk": 10807
+        },
+        "mean3": {
+          "mean_mase": 1.241,
+          "median_mase": 0.737,
+          "median_ape": 0.4147,
+          "mae_czk": 9454
+        },
+        "ses": {
+          "mean_mase": 1.26,
+          "median_mase": 0.657,
+          "median_ape": 0.3933,
+          "mae_czk": 9454
+        },
+        "split": {
+          "mean_mase": 1.261,
+          "median_mase": 0.659,
+          "median_ape": 0.3941,
+          "mae_czk": 9458
+        },
+        "split_usual": {
+          "mean_mase": 1.209,
+          "median_mase": 0.582,
+          "median_ape": 0.3616,
+          "mae_czk": 8921
+        }
+      },
+      "deployed_80pct_range_coverage": 0.694
+    },
+    {
+      "history_months": 12,
+      "forecasts": 45140,
+      "methods": {
+        "naive": {
+          "mean_mase": 1.155,
+          "median_mase": 0.7,
+          "median_ape": 0.4063,
+          "mae_czk": 10816
+        },
+        "mean3": {
+          "mean_mase": 1.009,
+          "median_mase": 0.709,
+          "median_ape": 0.4119,
+          "mae_czk": 9448
+        },
+        "ses": {
+          "mean_mase": 0.955,
+          "median_mase": 0.614,
+          "median_ape": 0.3826,
+          "mae_czk": 8939
+        },
+        "split": {
+          "mean_mase": 0.956,
+          "median_mase": 0.617,
+          "median_ape": 0.3838,
+          "mae_czk": 8944
+        },
+        "split_usual": {
+          "mean_mase": 0.916,
+          "median_mase": 0.545,
+          "median_ape": 0.3538,
+          "mae_czk": 8564
+        }
+      },
+      "deployed_80pct_range_coverage": 0.793
+    }
+  ],
+  "anomalies": [
+    {
+      "factor": 2,
+      "rules": {
+        "zscore_2_5": {
+          "detection_rate": 0.2834,
+          "flag_rate_on_real": 0.0278,
+          "injected": 4227
+        },
+        "mad_3_5": {
+          "detection_rate": 0.3225,
+          "flag_rate_on_real": 0.1244,
+          "injected": 4227
+        },
+        "mad_2_5": {
+          "detection_rate": 0.3653,
+          "flag_rate_on_real": 0.1498,
+          "injected": 4227
+        }
+      }
+    },
+    {
+      "factor": 3,
+      "rules": {
+        "zscore_2_5": {
+          "detection_rate": 0.3627,
+          "flag_rate_on_real": 0.0257,
+          "injected": 4227
+        },
+        "mad_3_5": {
+          "detection_rate": 0.4346,
+          "flag_rate_on_real": 0.1244,
+          "injected": 4227
+        },
+        "mad_2_5": {
+          "detection_rate": 0.5354,
+          "flag_rate_on_real": 0.1498,
+          "injected": 4227
+        }
+      }
+    },
+    {
+      "factor": 5,
+      "rules": {
+        "zscore_2_5": {
+          "detection_rate": 0.5597,
+          "flag_rate_on_real": 0.0222,
+          "injected": 4227
+        },
+        "mad_3_5": {
+          "detection_rate": 0.6361,
+          "flag_rate_on_real": 0.1244,
+          "injected": 4227
+        },
+        "mad_2_5": {
+          "detection_rate": 0.9851,
+          "flag_rate_on_real": 0.1498,
+          "injected": 4227
+        }
+      }
+    }
+  ],
+  "seconds": 21.1
+}

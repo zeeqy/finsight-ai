@@ -1,0 +1,73 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "client",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "client",
+        "run",
+        "dev"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "server",
+        "run",
+        "dev"
+      ],
+      "port": 5000
+    },
+    {
+      "name": "ml-service",
+      "runtimeExecutable": "ml-service/.venv/Scripts/python.exe",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "main:app",
+        "--port",
+        "8000",
+        "--app-dir",
+        "ml-service"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "client-prod",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "client",
+        "exec",
+        "--",
+        "vite",
+        "preview",
+        "client",
+        "--port",
+        "4173",
+        "--strictPort"
+      ],
+      "port": 4173
+    },
+    {
+      "name": "app-production",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "--env-file=server/.env",
+        "server/src/index.js"
+      ],
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": "5070",
+        "TRUST_PROXY": "false",
+        "CORS_ORIGIN": "http://localhost:5070"
+      },
+      "port": 5070
+    }
+  ]
+}

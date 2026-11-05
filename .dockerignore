@@ -1,0 +1,16 @@
+# Never sent into an image: secrets, personal data, local databases, other machines' builds
+**/.env
+**/.env.*
+!**/.env.example
+!.env.production.example
+server/data_store.json
+server/src/temp_uploads
+**/node_modules
+client/dist
+ml-service
+evaluation
+research
+ui-versions
+.claude
+.git
+**/*.log

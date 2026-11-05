@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#FFC80A" />
+    <!-- The headline font, fetched with the HTML instead of after the CSS: the sign-in headline (the largest paint) shows sooner -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/node_modules/@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2" />
+    <title>FinSight AI – An AI-Powered Personalised Financial Management Web Application</title>
+    <script>
+      // Apply the saved theme before the first paint; light unless dark or device was chosen (see src/context/ThemeContext.jsx)
+      (function () {
+        var pref = 'light';
+        var glass = 'on';
+        try {
+          pref = localStorage.getItem('finsight-theme') || 'light';
+          if (localStorage.getItem('finsight-glass') === 'off') glass = 'off';
+        } catch (e) {}
+        var dark = pref === 'dark' || (pref === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-transparency: reduce)').matches) glass = 'off';
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document.documentElement.dataset.glass = glass;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

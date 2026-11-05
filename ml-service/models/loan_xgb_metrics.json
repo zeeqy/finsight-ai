@@ -1,0 +1,71 @@
+{
+  "dataset": "Lending Club accepted loans 2007-2016 (lending_club_loan_two.csv), target = Charged Off",
+  "rows_used": 396022,
+  "split": {
+    "train": 277215,
+    "val": 59403,
+    "test": 59404
+  },
+  "default_rate": 0.1961,
+  "features": [
+    "credit_to_income",
+    "instalment_to_income",
+    "existing_dti",
+    "dsr_after",
+    "loan_term_years",
+    "years_employed",
+    "purpose_car",
+    "purpose_house"
+  ],
+  "test": {
+    "roc_auc": 0.6973,
+    "pr_auc": 0.3558,
+    "brier": 0.1449,
+    "threshold": 0.2054,
+    "precision": 0.3163,
+    "recall": 0.604,
+    "f1": 0.4152,
+    "confusion_matrix": {
+      "tn": 32542,
+      "fp": 15211,
+      "fn": 4614,
+      "tp": 7037
+    }
+  },
+  "risk_bands": {
+    "low_max": 0.1471,
+    "high_min": 0.2942,
+    "high_rule": "1.5x_base_rate",
+    "f1_optimal_threshold": 0.2054,
+    "test_band_default_rates": {
+      "Low": {
+        "applicants": 25087,
+        "actual_default_rate": 0.098
+      },
+      "Medium": {
+        "applicants": 23309,
+        "actual_default_rate": 0.2112
+      },
+      "High": {
+        "applicants": 11008,
+        "actual_default_rate": 0.3879
+      }
+    }
+  },
+  "comparison": {
+    "logistic_regression_roc_auc": 0.671,
+    "xgb_scale_pos_weight_roc_auc": 0.6978,
+    "xgb_scale_pos_weight_brier": 0.2188
+  },
+  "best_iteration": 978,
+  "mean_abs_shap": {
+    "instalment_to_income": 0.9193,
+    "credit_to_income": 0.8988,
+    "loan_term_years": 0.6727,
+    "dsr_after": 0.2708,
+    "years_employed": 0.0782,
+    "existing_dti": 0.0534,
+    "purpose_house": 0.0105,
+    "purpose_car": 0.0034
+  }
+}

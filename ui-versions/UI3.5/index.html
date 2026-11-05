@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#FFC80A" />
+    <!-- The headline font, fetched with the HTML instead of after the CSS: the sign-in headline (the largest paint) shows sooner -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/node_modules/@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2" />
+    <title>FinSight AI – An AI-Powered Personalised Financial Management Web Application</title>
+    <script>
+      // Apply the saved or device theme before the first paint (see src/context/ThemeContext.jsx)
+      (function () {
+        var pref = 'system';
+        try { pref = localStorage.getItem('finsight-theme') || 'system'; } catch (e) {}
+        var dark = pref === 'dark' || (pref !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
