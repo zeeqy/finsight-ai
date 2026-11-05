@@ -19,6 +19,7 @@ function StatusAlert({ status }) {
 const STATEMENT_SOURCES = [
   { bank: 'CIMB', how: 'The monthly PDF e-statement (tested).' },
   { bank: 'Bank Islam', how: 'The monthly PDF e-statement or a CSV of your transaction history from Bank Islam online banking (both tested).' },
+  { bank: 'AEON Bank', how: 'The monthly PDF e-statement from the AEON Bank app (tested).' },
   { bank: 'Maybank', how: 'Not tested with a real Maybank statement yet. Try a CSV from Maybank2u or the PDF e-statement.' },
   { bank: 'Other banks', how: 'Try the PDF e-statement. You will see what was found, and whether it adds up, before anything is saved.' },
 ];
@@ -40,10 +41,11 @@ function pdfCheckLines(preview) {
   for (const [key, word] of [['bank_total_out', 'money out'], ['bank_total_in', 'money in']]) {
     const t = c[key];
     if (!t) continue;
+    const total = t.count === null ? fmtRM(t.amount) : `${t.count} transactions, ${fmtRM(t.amount)}`; // some banks print the amount only
     lines.push(
       t.matches
-        ? { tone: 'ok', text: `Matches the bank's own total for ${word}: ${t.count} transactions, ${fmtRM(t.amount)}.` }
-        : { tone: 'warn', text: `Does not match the bank's own total for ${word} (${t.count} transactions, ${fmtRM(t.amount)}).` }
+        ? { tone: 'ok', text: `Matches the bank's own total for ${word}: ${total}.` }
+        : { tone: 'warn', text: `Does not match the bank's own total for ${word} (${total}).` }
     );
   }
   return lines;

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { parsePdfStatement, PdfStatementError } = require('../src/services/pdfStatement');
+const { parsePdfStatement, parseStatementLines, PdfStatementError } = require('../src/services/pdfStatement');
 const { makeStatementPdf } = require('../scripts/makeStatementPdf');
 
 const ROWS = [
@@ -67,6 +67,42 @@ test('PDF statement: locked file needs the right password', async () => {
   await assert.rejects(parsePdfStatement(pdf, 'salah'), (e) => e.code === 'PDF_PASSWORD_WRONG');
   const r = await parsePdfStatement(pdf, 'Rahsia@123');
   assert.equal(r.rows.length, 4);
+});
+
+test('PDF statement: AEON Bank layout ("19 Sep 26" dates, RM amounts on the line below, totals without counts)', () => {
+  // Positions as in a real AEON Bank e-statement; names and references are made up
+  const L = (y, ...items) => ({ y, items: items.map(([x, s]) => ({ x, right: x + 6 * s.length, s })) });
+  const page = [
+    L(787, [19, 'AEON Bank (M) Berhad 202201026163 (1471860-K)']),
+    L(646, [27, 'Account summary'], [358, 'Total withdrawal'], [536, '-RM 12.50']),
+    L(626, [358, 'Total deposits'], [538, 'RM 40.02']),
+    L(558, [27, 'Date'], [90, 'Description'], [384, 'Withdrawal'], [456, 'Deposit'], [536, 'Balance']),
+    L(535, [27, '01 Sep 26'], [90, 'Opening balance'], [536, 'RM 0.50']),
+    L(512, [27, '19 Sep 26'], [90, 'ENCIK ALI BIN ABU - DuitNowQR -']),
+    L(507, [450, 'RM 40.00'], [533, 'RM 40.50']),
+    L(502, [90, '260919231828792220215']),
+    L(260, [27, '28 Sep 26'], [90, 'KEDAI MAJU SDN - Visa Purchase']),
+    L(255, [390, '-RM 12.50'], [529, 'RM 28.00']),
+    L(250, [90, 'Transaction date: 26 Sep 26']),
+    L(162, [27, '30 Sep 26'], [90, 'Savings Account-i - Profit Earned'], [454, 'RM 0.02'], [530, 'RM 28.02']),
+    L(139, [27, '30 Sep 26'], [90, 'Closing balance'], [529, 'RM 28.02']),
+    L(49, [23, 'Important notice:']),
+  ];
+  const r = parseStatementLines([page]);
+  assert.equal(r.bank.id, 'aeon');
+  assert.deepEqual(
+    r.rows.map((x) => [x.txn_date, x.direction, x.amount, x.description]),
+    [
+      ['2026-09-19', 'in', 40, 'ENCIK ALI BIN ABU - DuitNowQR'],
+      ['2026-09-28', 'out', 12.5, 'KEDAI MAJU SDN - Visa Purchase'],
+      ['2026-09-30', 'in', 0.02, 'Savings Account-i - Profit Earned'],
+    ]
+  );
+  assert.equal(r.checks.opening_balance, 0.5);
+  assert.equal(r.checks.rows_not_matching, 0);
+  assert.equal(r.checks.closing_matches, true);
+  assert.deepEqual(r.checks.bank_total_out, { count: null, amount: 12.5, matches: true });
+  assert.deepEqual(r.checks.bank_total_in, { count: null, amount: 40.02, matches: true });
 });
 
 test('PDF statement: not a PDF, or a PDF with no table', async () => {

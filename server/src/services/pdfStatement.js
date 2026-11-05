@@ -11,12 +11,25 @@
  *     with the column as a fallback. Every row that does not add up is reported, never hidden.
  *
  * Tested on real CIMB (Savings Account-i) and Bank Islam (Savings Account) e-statements, 3 months
- * each. Other banks go through the same general reader and get the same checks in the preview.
+ * each, and AEON Bank (Savings Account-i, 2 months: "19 Sep 26" dates, "RM 36.00" amounts on the
+ * line under the description, account summary totals without counts). Other banks go through the same general reader and get the same checks in the preview.
  * The password is used once to open the file and is never stored or logged.
  */
 
-const MONEY = /^-?(\d[\d,]*)?\.\d{2}-?$/; // Bank Islam prints 50 sen as ".50"
-const DATE_START = /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})(?:\s+(.*))?$/;
+// Bank Islam prints 50 sen as ".50"; AEON Bank prints "RM 36.00" and "-RM 10.90"
+const MONEY = /^-?(RM\s?)?(\d[\d,]*)?\.\d{2}-?$/i;
+const DATE_NUM = /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})(?:\s+(.*))?$/; // 19/09/2026 (CIMB, Bank Islam)
+const DATE_NAME = /^(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{2}|\d{4})(?:\s+(.*))?$/; // 19 Sep 26 (AEON Bank)
+const MONTHS = { jan: 1, feb: 2, mar: 3, mac: 3, apr: 4, may: 5, mei: 5, jun: 6, jul: 7, aug: 8, ogo: 8, sep: 9, oct: 10, okt: 10, nov: 11, dec: 12, dis: 12 };
+
+/** A date at the start of a text: [whole, day, month, year, rest] with a numeric month, or null. */
+function matchDate(s) {
+  const num = s.match(DATE_NUM);
+  if (num) return num;
+  const named = s.match(DATE_NAME);
+  const month = named && MONTHS[named[2].slice(0, 3).toLowerCase()];
+  return month ? [named[0], named[1], String(month), named[3], named[4]] : null;
+}
 const HEADER_DATE = /^(date|tarikh)$/i;
 const HEADER_BALANCE = /\b(balance|baki)\b/i;
 const HEADER_DEBIT = /^(debit|withdrawals?|pengeluaran)$/i;
@@ -33,6 +46,7 @@ const NOISE_LINE = [
   /^[A-Z]?\d{5,}$/, // R97435, T63924
   /^\d{6,}[A-Z]\d+[A-Z]*\d*$/i, // 20260627M0003261861OBW42391829
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, // uuid
+  /^Transaction date:/i, // AEON Bank card purchases: the card date under the posting date
 ];
 const HONORIFIC = /^(ENCIK|EN|CIK|PUAN|PN|TUAN|MR|MRS|MS|MISS|DR)\.?\s+/i;
 
@@ -42,6 +56,7 @@ const BANKS = [
   { id: 'bank_islam', name: 'Bank Islam', test: /bankislam|BANK ISLAM/i, dropHolderOnDebit: true, codePrefix: /^\d{4}\s+/ },
   { id: 'cimb', name: 'CIMB', test: /\bCIMB\b/, dropHolderOnDebit: false },
   { id: 'maybank', name: 'Maybank', test: /maybank/i, dropHolderOnDebit: false },
+  { id: 'aeon', name: 'AEON Bank', test: /AEON Bank/i, dropHolderOnDebit: false },
 ];
 const OTHER_BANK = { id: 'other', name: 'your bank', dropHolderOnDebit: false };
 
@@ -59,7 +74,7 @@ function loadPdfjs() {
 }
 
 const money = (s) => {
-  const t = String(s).replace(/,/g, '');
+  const t = String(s).replace(/,|RM\s*/gi, '');
   const n = parseFloat(t.replace(/-/g, ''));
   return t.includes('-') ? -n : n;
 };
@@ -177,6 +192,9 @@ function parseStatementLines(pages) {
 
       const summary = text.match(/TOTAL (DEBIT|CREDIT)\s+(\d+)\s+([\d,]+\.\d{2})/i);
       if (summary) totals[summary[1].toLowerCase()] = { count: Number(summary[2]), amount: money(summary[3]) };
+      // AEON Bank's account summary gives amounts only: "Total withdrawal -RM 32.50", "Total deposits RM 379.12"
+      const amountOnly = !inTable && text.match(/\bTotal (withdrawals?|deposits?)\s+(-?RM\s?[\d,]+\.\d{2})$/i);
+      if (amountOnly) totals[/^w/i.test(amountOnly[1]) ? 'debit' : 'credit'] = { count: null, amount: Math.abs(money(amountOnly[2])) };
 
       if (!inTable) {
         const header = readHeader(line);
@@ -202,7 +220,12 @@ function parseStatementLines(pages) {
       if (/^\(RM\)/.test(text) || readHeader(line) || (HEADER_BALANCE.test(text) && !moneyItems.length && !current)) continue;
 
       const first = line.items[0];
-      const dateMatch = first.s.match(DATE_START);
+      // AEON Bank prints a row's amounts on their own line just under its date and description
+      if (current && !current.money.length && moneyItems.length && moneyItems.length === line.items.length) {
+        current.money = moneyItems;
+        continue;
+      }
+      const dateMatch = matchDate(first.s);
       if (dateMatch && Math.abs(first.x - cols.dateX) <= 20) {
         const words = [dateMatch[4] || '', ...line.items.slice(1).filter((i) => !MONEY.test(i.s) && !/^[A-Z]?\d{5,}$/.test(i.s)).map((i) => i.s)]
           .join(' ')
@@ -261,7 +284,8 @@ function parseStatementLines(pages) {
     const details = [];
     let afterHolder = false;
     for (const raw of t.details) {
-      const line = raw.replace(DATE_START, (m, d, mo, y, rest) => rest || '').trim();
+      const dated = matchDate(raw);
+      const line = (dated ? dated[4] || '' : raw).trim();
       if (!line || NOISE_LINE.some((re) => re.test(line))) continue;
       if (bank.dropHolderOnDebit && direction === 'out') {
         // The name wraps at a fixed width, so its tail ("MIR") is the short line right after it
@@ -273,7 +297,12 @@ function parseStatementLines(pages) {
       seen.add(line.toLowerCase());
       details.push(line);
     }
-    const description = [t.type, ...details].join(' ').replace(/\s+/g, ' ').trim().slice(0, 255);
+    const description = [t.type, ...details]
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .replace(/\s+-\s*$/, '') // AEON Bank: "NAME - DuitNowQR -" when the reference line is dropped
+      .trim()
+      .slice(0, 255);
 
     rows.push({ txn_date: t.txn_date, description, amount: round2(amount), direction, balance, reconciled });
   }
@@ -288,8 +317,10 @@ function parseStatementLines(pages) {
     money_out: { count: rows.filter((r) => r.direction === 'out').length, amount: sum('out') },
     money_in: { count: rows.filter((r) => r.direction === 'in').length, amount: sum('in') },
   };
-  if (totals.debit) checks.bank_total_out = { ...totals.debit, matches: totals.debit.count === checks.money_out.count && close(totals.debit.amount, checks.money_out.amount) };
-  if (totals.credit) checks.bank_total_in = { ...totals.credit, matches: totals.credit.count === checks.money_in.count && close(totals.credit.amount, checks.money_in.amount) };
+  // A bank total with no count (AEON Bank) is checked on the amount only
+  const totalMatches = (bankTotal, ours) => (bankTotal.count === null || bankTotal.count === ours.count) && close(bankTotal.amount, ours.amount);
+  if (totals.debit) checks.bank_total_out = { ...totals.debit, matches: totalMatches(totals.debit, checks.money_out) };
+  if (totals.credit) checks.bank_total_in = { ...totals.credit, matches: totalMatches(totals.credit, checks.money_in) };
 
   return { bank: { id: bank.id, name: bank.name }, rows, checks };
 }
