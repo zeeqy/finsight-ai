@@ -1540,6 +1540,34 @@ async function nov5Tests() {
     }
   );
 
+  await tc(
+    'M1-34',
+    M,
+    'Uploads listed by month',
+    'September CSV, October CSV, a CSV covering 28 Sep to 3 Oct and one hand-added October row; list September, October and December',
+    'Each month lists only files with rows in it, with that month\'s count and totals; the two-month file appears in both; December lists none; total_files 3',
+    async () => {
+      const v = await newUser('uploads-month');
+      await upload(v.token, 'sep.csv', 'Date,Description,Amount\n2026-09-05,JAYA GROCER KL,-50.00\n');
+      await upload(v.token, 'oct.csv', 'Date,Description,Amount\n2026-10-05,GRAB RIDE,-12.00\n2026-10-06,MR DIY SHAH ALAM,-8.00\n');
+      await upload(v.token, 'span.csv', 'Date,Description,Amount\n2026-09-28,PETRONAS SHAH ALAM,-70.00\n2026-10-03,TNB BILL,-90.00\n2026-10-04,UNIQLO KLCC,-40.00\n');
+      await post('/api/transactions/manual', { date: '2026-10-08', description: 'NASI LEMAK CASH', amount: 6, direction: 'out' }, v.token);
+      const month = async (m) => (await get(`/api/transactions/statements?year=2026&month=${m}`, v.token)).data.data;
+      const sep = await month(9);
+      const oct = await month(10);
+      const dec = await month(12);
+      const names = (d) => d.statements.map((s) => s.filename).sort().join(',');
+      check(names(sep) === 'sep.csv,span.csv' && names(oct) === 'oct.csv,span.csv', `${names(sep)} / ${names(oct)}`);
+      const spanSep = sep.statements.find((s) => s.filename === 'span.csv');
+      const spanOct = oct.statements.find((s) => s.filename === 'span.csv');
+      check(spanSep.month_count === 1 && spanSep.month_out === 70 && spanSep.txn_count === 3, JSON.stringify(spanSep));
+      check(spanOct.month_count === 2 && spanOct.month_out === 130 && spanOct.money_out === 200, JSON.stringify(spanOct));
+      check(oct.manual_count === 1 && sep.manual_count === 0, `manual ${sep.manual_count}/${oct.manual_count}`);
+      check(dec.statements.length === 0 && dec.total_files === 3 && oct.total_files === 3, JSON.stringify(dec));
+      return `Sep: ${names(sep)}; Oct: ${names(oct)} (span.csv 2 of 3 rows); Dec: none of 3 files`;
+    }
+  );
+
   M = 'M4 Life Goals';
   await tc('M4-19', M, 'Savings found in statements', 'Tabung Haji goal; RM 200 transfer to LEMBAGA TABUNG HAJI today', 'Offered once; adding raises saved by RM 200; a second answer 409', async () => {
     const v = await newUser('deposit');

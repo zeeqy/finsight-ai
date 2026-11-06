@@ -818,33 +818,57 @@ router.patch('/:id/category', async (req, res) => {
  * GET /api/transactions/statements
  * "Your uploads": one entry per uploaded file that still has transactions, with its bank, the dates it
  * covers and its totals, so the user can remove one bank's file without touching the others.
+ * With ?year&month it lists only the files that have transactions in that month (the dashboard's month).
  */
 router.get('/statements', requireMysql, async (req, res) => {
   try {
     const userId = req.user.id;
+    // ?year&month: only files with transactions in that month, with that month's figures beside the file's totals
+    const year = parseInt(req.query.year, 10);
+    const month = parseInt(req.query.month, 10);
+    const byMonth = Number.isInteger(year) && Number.isInteger(month) && month >= 1 && month <= 12;
+    const inMonth = 'YEAR(t.txn_date) = ? AND MONTH(t.txn_date) = ?';
+    const monthCols = byMonth
+      ? `, SUM(CASE WHEN ${inMonth} THEN 1 ELSE 0 END) AS month_count,
+              SUM(CASE WHEN ${inMonth} AND t.category = 'Income' THEN t.amount ELSE 0 END) AS month_in,
+              SUM(CASE WHEN ${inMonth} AND t.category <> 'Income' THEN t.amount ELSE 0 END) AS month_out`
+      : '';
+    const monthParams = byMonth ? [year, month, year, month, year, month] : [];
     const [rows] = await db.query(
       `SELECT s.id, s.filename, s.bank, s.file_type, s.uploaded_at,
               COUNT(t.id) AS txn_count, MIN(t.txn_date) AS first_date, MAX(t.txn_date) AS last_date,
               SUM(CASE WHEN t.category = 'Income' THEN t.amount ELSE 0 END) AS money_in,
-              SUM(CASE WHEN t.category <> 'Income' THEN t.amount ELSE 0 END) AS money_out
+              SUM(CASE WHEN t.category <> 'Income' THEN t.amount ELSE 0 END) AS money_out${monthCols}
          FROM bank_statements s
          JOIN transactions t ON t.statement_id = s.id AND t.user_id = s.user_id
         WHERE s.user_id = ?
         GROUP BY s.id, s.filename, s.bank, s.file_type, s.uploaded_at
+        ${byMonth ? 'HAVING month_count > 0' : ''}
         ORDER BY s.uploaded_at DESC, s.id DESC`,
+      [...monthParams, userId]
+    );
+    const [[manual]] = await db.query(
+      `SELECT COUNT(*) AS n FROM transactions t WHERE t.user_id = ? AND t.statement_id IS NULL${byMonth ? ` AND ${inMonth}` : ''}`,
+      byMonth ? [userId, year, month] : [userId]
+    );
+    const [[all]] = await db.query(
+      'SELECT COUNT(DISTINCT t.statement_id) AS n FROM transactions t WHERE t.user_id = ? AND t.statement_id IS NOT NULL',
       [userId]
     );
-    const [[manual]] = await db.query('SELECT COUNT(*) AS n FROM transactions WHERE user_id = ? AND statement_id IS NULL', [userId]);
+    const rm = (v) => Math.round(Number(v) * 100) / 100;
     return res.json({
       success: true,
       data: {
         statements: rows.map((r) => ({
           ...r,
           txn_count: Number(r.txn_count),
-          money_in: Math.round(Number(r.money_in) * 100) / 100,
-          money_out: Math.round(Number(r.money_out) * 100) / 100,
+          money_in: rm(r.money_in),
+          money_out: rm(r.money_out),
+          ...(byMonth ? { month_count: Number(r.month_count), month_in: rm(r.month_in), month_out: rm(r.month_out) } : {}),
         })),
         manual_count: Number(manual.n),
+        total_files: Number(all.n),
+        ...(byMonth ? { year, month } : {}),
       },
     });
   } catch (error) {

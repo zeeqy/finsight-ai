@@ -1,8 +1,8 @@
 {
   "summary": {
-    "run_at": "2026-11-06T02:33:23.102Z",
-    "total": 140,
-    "pass": 140,
+    "run_at": "2026-11-06T04:10:47.863Z",
+    "total": 141,
+    "pass": 141,
     "fail": 0,
     "blocked": 0
   },
@@ -1264,6 +1264,16 @@
       "input": "Same month from three files (Bank Islam PDF, two CSVs), one hand-added transaction, one budget; remove the first CSV; another user tries to remove a file",
       "expected": "Three uploads listed with bank, dates and totals; removing one deletes only its rows; the others, the hand-added row and the budget stay; another user gets 404",
       "actual": "3 uploads listed; removed 2 rows of cimb-oct.csv; 4 rows, 2 uploads and the budget remain",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-34",
+      "module": "M1 Spend Analyser",
+      "title": "Uploads listed by month",
+      "input": "September CSV, October CSV, a CSV covering 28 Sep to 3 Oct and one hand-added October row; list September, October and December",
+      "expected": "Each month lists only files with rows in it, with that month's count and totals; the two-month file appears in both; December lists none; total_files 3",
+      "actual": "Sep: sep.csv,span.csv; Oct: oct.csv,span.csv (span.csv 2 of 3 rows); Dec: none of 3 files",
       "status": "PASS",
       "detail": null
     },

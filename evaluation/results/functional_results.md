@@ -1,11 +1,11 @@
 # FinSight AI functional test results
 
-Run 2026-11-06T02:33:23.102Z. **140 of 140 passed**, 0 failed, 0 blocked.
+Run 2026-11-06T04:10:47.863Z. **141 of 141 passed**, 0 failed, 0 blocked.
 
 | Area | Cases | Pass | Fail | Blocked |
 |---|---|---|---|---|
 | Authentication & security | 25 | 25 | 0 | 0 |
-| M1 Spend Analyser | 31 | 31 | 0 | 0 |
+| M1 Spend Analyser | 32 | 32 | 0 | 0 |
 | M1 Budgets | 4 | 4 | 0 | 0 |
 | M2 AI Advisor | 6 | 6 | 0 | 0 |
 | M3 Loan Predictor | 20 | 20 | 0 | 0 |
@@ -80,6 +80,7 @@ Run 2026-11-06T02:33:23.102Z. **140 of 140 passed**, 0 failed, 0 blocked.
 | M1-31 | Month in review | Sep: groceries RM 200; Oct: groceries RM 450, transport RM 80 | Spend up RM 330; groceries the biggest mover; first month has no comparison | You spent RM 330 more than in September: RM 530 against RM 200. Groceries up RM 250 (RM 200 to RM 450). Transport: RM 80, new this month. | PASS |
 | M1-32 | Dates without a time-zone shift | Transaction on 1 Oct 2026 | Ledger returns "2026-10-01" (not 30 Sep 16:00 UTC) | txn_date 2026-10-01 | PASS |
 | M1-33 | Remove one uploaded file | Same month from three files (Bank Islam PDF, two CSVs), one hand-added transaction, one budget; remove the first CSV; another user tries to remove a file | Three uploads listed with bank, dates and totals; removing one deletes only its rows; the others, the hand-added row and the budget stay; another user gets 404 | 3 uploads listed; removed 2 rows of cimb-oct.csv; 4 rows, 2 uploads and the budget remain | PASS |
+| M1-34 | Uploads listed by month | September CSV, October CSV, a CSV covering 28 Sep to 3 Oct and one hand-added October row; list September, October and December | Each month lists only files with rows in it, with that month's count and totals; the two-month file appears in both; December lists none; total_files 3 | Sep: sep.csv,span.csv; Oct: oct.csv,span.csv (span.csv 2 of 3 rows); Dec: none of 3 files | PASS |
 
 ## M1 Budgets
 

@@ -212,7 +212,11 @@ export default function DashboardPage() {
     const name = s.bank ? `${s.bank} (${s.filename})` : s.filename;
     const ok = await confirm({
       title: `Remove ${s.txn_count} ${s.txn_count === 1 ? 'transaction' : 'transactions'} from ${name}?`,
-      body: 'Only this file’s transactions are deleted. Your other uploads, transactions added by hand and budgets stay. This cannot be undone, but you can upload the file again.',
+      body: `${
+        s.month_count != null && s.txn_count > s.month_count
+          ? `This file also covers other months: all ${s.txn_count} of its transactions are removed, not only the ${s.month_count} in ${monthName(period.month)}. `
+          : ''
+      }Only this file’s transactions are deleted. Your other uploads, transactions added by hand and budgets stay. This cannot be undone, but you can upload the file again.`,
       action: 'Remove',
     });
     if (!ok) return;
@@ -407,7 +411,7 @@ export default function DashboardPage() {
             {actionError}
           </Notice>
 
-          <UploadsCard refreshKey={`${uploadsKey}|${allTransactions.length}`} onRemove={handleRemoveUpload} busy={busy} />
+          <UploadsCard period={isAllTime ? null : period} refreshKey={`${uploadsKey}|${allTransactions.length}`} onRemove={handleRemoveUpload} busy={busy} />
 
           <TransactionLedger
             transactions={ledgerTransactions}
