@@ -1,11 +1,11 @@
 # FinSight AI functional test results
 
-Run 2026-11-05T09:42:37.732Z. **139 of 139 passed**, 0 failed, 0 blocked.
+Run 2026-11-06T02:33:23.102Z. **140 of 140 passed**, 0 failed, 0 blocked.
 
 | Area | Cases | Pass | Fail | Blocked |
 |---|---|---|---|---|
 | Authentication & security | 25 | 25 | 0 | 0 |
-| M1 Spend Analyser | 30 | 30 | 0 | 0 |
+| M1 Spend Analyser | 31 | 31 | 0 | 0 |
 | M1 Budgets | 4 | 4 | 0 | 0 |
 | M2 AI Advisor | 6 | 6 | 0 | 0 |
 | M3 Loan Predictor | 20 | 20 | 0 | 0 |
@@ -79,6 +79,7 @@ Run 2026-11-05T09:42:37.732Z. **139 of 139 passed**, 0 failed, 0 blocked.
 | M1-30 | Same month as CSV and PDF | Oct 2026 as a CSV (4 rows), then the same Oct as a PDF worded differently plus 1 new row; then a Jul 2026 CSV | PDF preview finds 4 already imported from another file and 1 new; import adds 1; the Jul upload reports Jul as its month, not the latest month | Preview: 4 already imported (from another file), 1 new; import +1, 5 rows stored; Jul upload focuses Jul 2026 | PASS |
 | M1-31 | Month in review | Sep: groceries RM 200; Oct: groceries RM 450, transport RM 80 | Spend up RM 330; groceries the biggest mover; first month has no comparison | You spent RM 330 more than in September: RM 530 against RM 200. Groceries up RM 250 (RM 200 to RM 450). Transport: RM 80, new this month. | PASS |
 | M1-32 | Dates without a time-zone shift | Transaction on 1 Oct 2026 | Ledger returns "2026-10-01" (not 30 Sep 16:00 UTC) | txn_date 2026-10-01 | PASS |
+| M1-33 | Remove one uploaded file | Same month from three files (Bank Islam PDF, two CSVs), one hand-added transaction, one budget; remove the first CSV; another user tries to remove a file | Three uploads listed with bank, dates and totals; removing one deletes only its rows; the others, the hand-added row and the budget stay; another user gets 404 | 3 uploads listed; removed 2 rows of cimb-oct.csv; 4 rows, 2 uploads and the budget remain | PASS |
 
 ## M1 Budgets
 
@@ -130,7 +131,7 @@ Run 2026-11-05T09:42:37.732Z. **139 of 139 passed**, 0 failed, 0 blocked.
 | ID | Test | Input | Expected | Actual | Result |
 |---|---|---|---|---|---|
 | TC08 | Haji goal, piggybank | Target RM 23,500, 60 months, RM 0 saved | RM 391.67/month | RM 391.67, On Track | PASS |
-| TC09 | Kahwin beyond the surplus | Needs RM 1,500/mo for 24 months, surplus RM 800 | Not Feasible + date 45 months away | RM 1,500, Not Feasible, adjusted to 2030-08-05 | PASS |
+| TC09 | Kahwin beyond the surplus | Needs RM 1,500/mo for 24 months, surplus RM 800 | Not Feasible + date 45 months away | RM 1,500, Not Feasible, adjusted to 2030-08-06 | PASS |
 | M4-01 | Feasibility boundaries | Surplus RM 800: ratio 0.5, 1.0, just above 1.0 | On Track, At Risk, Not Feasible | On Track, At Risk, Not Feasible | PASS |
 | M4-17 | Goals share the surplus | Surplus RM 800: goal due in 12 months needs RM 400, goal due in 24 months needs RM 600 | Second goal gets RM 400 now, At Risk, catches up after the first ends | Second: RM 400 free now, At Risk, catches up | PASS |
 | M4-18 | Commitments lower the surplus | Income RM 3,000, no statements, RM 500 car loan saved | Surplus RM 2,500, DSR 16.67%, loan form prefilled | Surplus RM 2500, DSR 16.67%, prefill RM 500 | PASS |

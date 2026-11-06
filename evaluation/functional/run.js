@@ -1492,6 +1492,54 @@ async function nov5Tests() {
     return `txn_date ${rows[0].txn_date}`;
   });
 
+  await tc(
+    'M1-33',
+    M,
+    'Remove one uploaded file',
+    'Same month from three files (Bank Islam PDF, two CSVs), one hand-added transaction, one budget; remove the first CSV; another user tries to remove a file',
+    'Three uploads listed with bank, dates and totals; removing one deletes only its rows; the others, the hand-added row and the budget stay; another user gets 404',
+    async () => {
+      const v = await newUser('uploads');
+      const { makeStatementPdf } = require('../../server/scripts/makeStatementPdf');
+      const pdf = makeStatementPdf({
+        bankLine: 'Bank Islam Malaysia Berhad',
+        holder: 'ENCIK ALI BIN ABU BAKAR SEBAGAI',
+        opening: 500,
+        rows: [
+          { date: '03/10/2026', type: 'MYDEBIT PURCHASE', details: ['KEDAI RUNCIT MAJU'], amount: 23.4, dir: 'out' },
+          { date: '04/10/2026', type: 'DUITNOW TO ACCOUNT', details: ['GAJI SYARIKAT CONTOH'], amount: 1500, dir: 'in' },
+        ],
+      });
+      check((await uploadPdf(v.token, 'bankislam-oct.pdf', pdf)).status === 201, 'PDF upload');
+      check((await upload(v.token, 'cimb-oct.csv', 'Date,Description,Amount\n2026-10-05,JAYA GROCER KL,-61.00\n2026-10-06,GRAB RIDE,-12.00\n')).status === 201, 'CSV 1');
+      check((await upload(v.token, 'aeon-oct.csv', 'Date,Description,Amount\n2026-10-07,MR DIY SHAH ALAM,-9.90\n')).status === 201, 'CSV 2');
+      await post('/api/transactions/manual', { date: '2026-10-08', description: 'NASI LEMAK CASH', amount: 6, direction: 'out' }, v.token);
+      await post('/api/budgets', { category: 'Groceries', budget_limit: 400, month: 10, year: 2026 }, v.token);
+
+      const list = (await get('/api/transactions/statements', v.token)).data.data;
+      check(list.statements.length === 3 && list.manual_count === 1, JSON.stringify(list));
+      const islam = list.statements.find((s) => s.filename === 'bankislam-oct.pdf');
+      check(islam.bank === 'Bank Islam' && islam.file_type === 'pdf' && islam.txn_count === 2 && islam.money_in === 1500 && islam.money_out === 23.4, JSON.stringify(islam));
+      const cimb = list.statements.find((s) => s.filename === 'cimb-oct.csv');
+      check(cimb.first_date === '2026-10-05' && cimb.last_date === '2026-10-06' && cimb.money_out === 73, JSON.stringify(cimb));
+
+      const other = await newUser('uploads-other');
+      check((await del(`/api/transactions/statements/${cimb.id}`, other.token)).status === 404, 'another user removed the file');
+
+      const removed = await del(`/api/transactions/statements/${cimb.id}`, v.token);
+      check(removed.status === 200 && removed.data.deletedCount === 2, JSON.stringify(removed.data));
+      const rows = (await get('/api/transactions/list?year=2026&month=10', v.token)).data.transactions;
+      const descs = rows.map((r) => r.description).join(' | ');
+      check(rows.length === 4 && !/JAYA GROCER|GRAB/.test(descs) && /NASI LEMAK CASH/.test(descs) && /MR DIY/.test(descs), descs);
+      const after = (await get('/api/transactions/statements', v.token)).data.data;
+      check(after.statements.length === 2 && !after.statements.some((s) => s.id === cimb.id), JSON.stringify(after.statements.map((s) => s.filename)));
+      const budgets = (await get('/api/budgets?month=10&year=2026', v.token)).data.budgets;
+      check(budgets.length === 1, `budgets: ${budgets.length}`);
+      check((await del(`/api/transactions/statements/${cimb.id}`, v.token)).status === 404, 'second removal not 404');
+      return `3 uploads listed; removed ${removed.data.deletedCount} rows of cimb-oct.csv; 4 rows, 2 uploads and the budget remain`;
+    }
+  );
+
   M = 'M4 Life Goals';
   await tc('M4-19', M, 'Savings found in statements', 'Tabung Haji goal; RM 200 transfer to LEMBAGA TABUNG HAJI today', 'Offered once; adding raises saved by RM 200; a second answer 409', async () => {
     const v = await newUser('deposit');

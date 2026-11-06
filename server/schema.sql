@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS `bank_statements` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NOT NULL,
   `filename` VARCHAR(255) NOT NULL,
+  `bank` VARCHAR(40) NULL,
+  `file_type` VARCHAR(10) NULL,
   `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT `fk_statements_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

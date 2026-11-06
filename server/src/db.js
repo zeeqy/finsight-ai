@@ -349,6 +349,15 @@ async function initDatabase() {
       if (err.code !== 'ER_DUP_FIELDNAME') throw err;
     }
 
+    // Module 1 "Your uploads": which bank and file type each upload was, so one file can be found and deleted
+    for (const col of ['bank VARCHAR(40) NULL', 'file_type VARCHAR(10) NULL']) {
+      try {
+        await pool.query(`ALTER TABLE bank_statements ADD COLUMN ${col}`);
+      } catch (err) {
+        if (err.code !== 'ER_DUP_FIELDNAME') throw err;
+      }
+    }
+
     // Health check: emergency savings and household type (for the Belanjawanku reference budget)
     // terms_accepted_at: when the sign-up box (18 or older, Terms of use) was ticked
     for (const col of ['emergency_savings DECIMAL(12, 2) NULL', 'household_type VARCHAR(30) NULL', 'terms_accepted_at DATETIME NULL']) {
@@ -583,6 +592,8 @@ function executeFallbackQuery(sql, params) {
       id,
       user_id: parseInt(params[0], 10),
       filename: params[1],
+      bank: params[2] || null,
+      file_type: params[3] || null,
       uploaded_at: new Date().toISOString(),
     };
     data.bank_statements.push(newStmt);

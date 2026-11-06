@@ -16,8 +16,8 @@
  * The password is used once to open the file and is never stored or logged.
  */
 
-// Bank Islam prints 50 sen as ".50"; AEON Bank prints "RM 36.00" and "-RM 10.90"
-const MONEY = /^-?(RM\s?)?(\d[\d,]*)?\.\d{2}-?$/i;
+// Bank Islam prints 50 sen as ".50"; AEON Bank prints "RM 36.00" and "-RM 10.90"; Maybank "10.10-" and "30.00+"
+const MONEY = /^-?(RM\s?)?(\d[\d,]*)?\.\d{2}[-+]?$/i;
 const DATE_NUM = /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})(?:\s+(.*))?$/; // 19/09/2026 (CIMB, Bank Islam)
 const DATE_NAME = /^(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{2}|\d{4})(?:\s+(.*))?$/; // 19 Sep 26 (AEON Bank)
 const MONTHS = { jan: 1, feb: 2, mar: 3, mac: 3, apr: 4, may: 5, mei: 5, jun: 6, jul: 7, aug: 8, ogo: 8, sep: 9, oct: 10, okt: 10, nov: 11, dec: 12, dis: 12 };
@@ -30,13 +30,14 @@ function matchDate(s) {
   const month = named && MONTHS[named[2].slice(0, 3).toLowerCase()];
   return month ? [named[0], named[1], String(month), named[3], named[4]] : null;
 }
-const HEADER_DATE = /^(date|tarikh)$/i;
+const HEADER_DATE = /^(date|tarikh|entry date|tarikh masuk)$/i; // Maybank: "ENTRY DATE" / "TARIKH MASUK"
 const HEADER_BALANCE = /\b(balance|baki)\b/i;
 const HEADER_DEBIT = /^(debit|withdrawals?|pengeluaran)$/i;
 const HEADER_CREDIT = /^(credit|kredit|deposits?)$/i;
-const OPENING = /OPENING BALANCE|BAL(ANCE)? B\/F|BALANCE BROUGHT FORWARD|BAKI AWAL|BAKI DIBAWA/i;
-const CLOSING = /CLOSING BALANCE|BAKI PENUTUP|BAL(ANCE)? C\/F|BALANCE CARRIED FORWARD/i;
-const TABLE_END = /CLOSING BALANCE|BAKI PENUTUP|End of Statement|RINGKASAN|SUMMARY OF ACCOUNT|TOTAL DEBIT|TOTAL CREDIT|MONTHLY AVERAGE|Important Notice|Notis Penting/i;
+const HEADER_AMOUNT = /^(transaction amount|jumlah urusniaga|amount|amaun)$/i; // one signed amount column (Maybank)
+const OPENING = /OPENING BALANCE|BEGINNING BALANCE|BAL(ANCE)? B\/F|BALANCE BROUGHT FORWARD|BAKI AWAL|BAKI DIBAWA/i;
+const CLOSING = /CLOSING BALANCE|ENDING BALANCE|BAKI PENUTUP|BAL(ANCE)? C\/F|BALANCE CARRIED FORWARD/i;
+const TABLE_END = /CLOSING BALANCE|ENDING BALANCE|BAKI PENUTUP|End of Statement|RINGKASAN|SUMMARY OF ACCOUNT|TOTAL DEBIT|TOTAL CREDIT|MONTHLY AVERAGE|Important Notice|Notis Penting/i;
 
 // Detail lines that carry no meaning for categorising: reference numbers and bank codes
 const NOISE_LINE = [
@@ -47,13 +48,19 @@ const NOISE_LINE = [
   /^\d{6,}[A-Z]\d+[A-Z]*\d*$/i, // 20260627M0003261861OBW42391829
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, // uuid
   /^Transaction date:/i, // AEON Bank card purchases: the card date under the posting date
+  /^[A-Z]{3,6}\d{6,}$/, // MBBQR2378651 (Maybank)
+  /^\d{6,}[A-Z]$/, // 085400412Q (Maybank)
 ];
+// Maybank: a card hold at a fuel pump and its release cancel out; only the real payment after them counts
+// (A hold or release whose other half is in another month's statement stays: it moved this month's balance.)
+const HOLD = /^PRE-?AUTH\b(?! REFUND)/i;
+const HOLD_RELEASE = /^(REV PRE-?AUTH|PRE-?AUTH REFUND)\b/i;
 const HONORIFIC = /^(ENCIK|EN|CIK|PUAN|PN|TUAN|MR|MRS|MS|MISS|DR)\.?\s+/i;
 
 const BANKS = [
   // Bank Islam prints the account holder's name under every outgoing payment and card purchase;
   // left in, every payment would look like a transfer to the user's own account.
-  { id: 'bank_islam', name: 'Bank Islam', test: /bankislam|BANK ISLAM/i, dropHolderOnDebit: true, codePrefix: /^\d{4}\s+/ },
+  { id: 'bank_islam', name: 'Bank Islam', test: /bankislam|\bBANK ISLAM\b/i /* not "MayBANK ISLAMic" */, dropHolderOnDebit: true, codePrefix: /^\d{4}\s+/ },
   { id: 'cimb', name: 'CIMB', test: /\bCIMB\b/, dropHolderOnDebit: false },
   { id: 'maybank', name: 'Maybank', test: /maybank/i, dropHolderOnDebit: false },
   { id: 'aeon', name: 'AEON Bank', test: /AEON Bank/i, dropHolderOnDebit: false },
@@ -74,7 +81,7 @@ function loadPdfjs() {
 }
 
 const money = (s) => {
-  const t = String(s).replace(/,|RM\s*/gi, '');
+  const t = String(s).replace(/,|RM\s*|\+/gi, '');
   const n = parseFloat(t.replace(/-/g, ''));
   return t.includes('-') ? -n : n;
 };
@@ -155,11 +162,12 @@ function readHeader(line) {
   if (!date || !balance) return null;
   const debit = line.items.find((i) => HEADER_DEBIT.test(i.s));
   const credit = line.items.find((i) => HEADER_CREDIT.test(i.s));
+  const amount = line.items.find((i) => HEADER_AMOUNT.test(i.s));
   return {
     dateX: date.x,
     debitX: debit ? center(debit) : null,
     creditX: credit ? center(credit) : null,
-    amountsFrom: Math.min(...[debit, credit, balance].filter(Boolean).map((i) => i.x)) - 40,
+    amountsFrom: Math.min(...[debit, credit, amount, balance].filter(Boolean).map((i) => i.x)) - 40,
   };
 }
 
@@ -174,7 +182,9 @@ function toIsoDate(d, m, y) {
  */
 function parseStatementLines(pages) {
   const allText = pages.map((p) => p.map(lineText).join('\n')).join('\n');
-  const bank = BANKS.find((b) => b.test.test(allText)) || OTHER_BANK;
+  // The bank from the top of page 1 first: transfer descriptions further down can name other banks
+  const topText = (pages[0] || []).slice(0, 12).map(lineText).join('\n');
+  const bank = BANKS.find((b) => b.test.test(topText)) || BANKS.find((b) => b.test.test(allText)) || OTHER_BANK;
   const holder = findHolder(pages[0] || []);
 
   const txns = [];
@@ -182,10 +192,12 @@ function parseStatementLines(pages) {
   let closing = null;
   const totals = {};
 
+  let lastTxn = null;
   for (const page of pages) {
     let cols = null; // each page repeats its header
     let current = null;
     let inTable = false;
+    let carry = lastTxn; // a description may continue at the top of the next page (Maybank)
 
     for (const line of page) {
       const text = lineText(line);
@@ -194,6 +206,8 @@ function parseStatementLines(pages) {
       if (summary) totals[summary[1].toLowerCase()] = { count: Number(summary[2]), amount: money(summary[3]) };
       // AEON Bank's account summary gives amounts only: "Total withdrawal -RM 32.50", "Total deposits RM 379.12"
       const amountOnly = !inTable && text.match(/\bTotal (withdrawals?|deposits?)\s+(-?RM\s?[\d,]+\.\d{2})$/i);
+      const colonTotal = text.match(/TOTAL (DEBIT|CREDIT)\s*:\s*([\d,]+\.\d{2})/i); // Maybank: "TOTAL DEBIT : 1,434.20"
+      if (colonTotal) totals[colonTotal[1].toLowerCase()] = { count: null, amount: money(colonTotal[2]) };
       if (amountOnly) totals[/^w/i.test(amountOnly[1]) ? 'debit' : 'credit'] = { count: null, amount: Math.abs(money(amountOnly[2])) };
 
       if (!inTable) {
@@ -220,6 +234,11 @@ function parseStatementLines(pages) {
       if (/^\(RM\)/.test(text) || readHeader(line) || (HEADER_BALANCE.test(text) && !moneyItems.length && !current)) continue;
 
       const first = line.items[0];
+      if (carry && !current && first.x >= cols.dateX + 15 && !moneyItems.length && !matchDate(first.s)) {
+        carry.details.push(text);
+        continue;
+      }
+      if (moneyItems.length || matchDate(first.s)) carry = null; // header lines in other languages keep it
       // AEON Bank prints a row's amounts on their own line just under its date and description
       if (current && !current.money.length && moneyItems.length && moneyItems.length === line.items.length) {
         current.money = moneyItems;
@@ -238,6 +257,7 @@ function parseStatementLines(pages) {
           cols,
         };
         txns.push(current);
+        lastTxn = current;
         continue;
       }
 
@@ -270,6 +290,7 @@ function parseStatementLines(pages) {
       else if (close(round2(prev + amount), balance)) direction = 'in';
       reconciled = direction !== null;
     }
+    if (!direction && /[-+]$|^-/.test(amountItem.s)) direction = /\+$/.test(amountItem.s) ? 'in' : 'out'; // printed sign
     if (!direction) {
       const c = center(amountItem);
       const dDebit = t.cols.debitX === null ? Infinity : Math.abs(c - t.cols.debitX);
@@ -285,7 +306,7 @@ function parseStatementLines(pages) {
     let afterHolder = false;
     for (const raw of t.details) {
       const dated = matchDate(raw);
-      const line = (dated ? dated[4] || '' : raw).trim();
+      const line = (dated ? dated[4] || '' : raw).replace(/\s*\*+\s*$/, '').trim(); // Maybank marks cut-off names with "*"
       if (!line || NOISE_LINE.some((re) => re.test(line))) continue;
       if (bank.dropHolderOnDebit && direction === 'out') {
         // The name wraps at a fixed width, so its tail ("MIR") is the short line right after it
@@ -304,7 +325,7 @@ function parseStatementLines(pages) {
       .trim()
       .slice(0, 255);
 
-    rows.push({ txn_date: t.txn_date, description, amount: round2(amount), direction, balance, reconciled });
+    rows.push({ txn_date: t.txn_date, description, amount: round2(amount), direction, balance, reconciled, merchant: (details[0] || '').slice(0, 10).toUpperCase() });
   }
 
   const sum = (dir) => round2(rows.filter((r) => r.direction === dir).reduce((s, r) => s + r.amount, 0));
@@ -322,7 +343,20 @@ function parseStatementLines(pages) {
   if (totals.debit) checks.bank_total_out = { ...totals.debit, matches: totalMatches(totals.debit, checks.money_out) };
   if (totals.credit) checks.bank_total_in = { ...totals.credit, matches: totalMatches(totals.credit, checks.money_in) };
 
-  return { bank: { id: bank.id, name: bank.name }, rows, checks };
+  // A card hold and its release (same amount) cancel out. The checks above still include them, so the
+  // bank's own totals can be compared; the real payment is its own row and is kept.
+  const dropped = new Set();
+  rows.forEach((r, i) => {
+    if (!HOLD.test(r.description) || r.direction !== 'out' || dropped.has(i)) return;
+    const j = rows.findIndex(
+      (x, k) => (k > i || x.txn_date === r.txn_date) && !dropped.has(k) && HOLD_RELEASE.test(x.description) && x.direction === 'in' && close(x.amount, r.amount) && x.merchant === r.merchant
+    );
+    if (j > -1) dropped.add(i).add(j);
+  });
+  checks.card_holds_left_out = dropped.size / 2;
+
+  const kept = rows.filter((_, i) => !dropped.has(i)).map(({ merchant, ...row }) => row);
+  return { bank: { id: bank.id, name: bank.name }, rows: kept, checks };
 }
 
 /** Open a PDF e-statement (with its password if locked) and parse its transactions. */

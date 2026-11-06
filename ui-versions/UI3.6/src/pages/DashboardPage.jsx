@@ -9,6 +9,7 @@ import SpendingTrend from '../components/dashboard/SpendingTrend';
 import BudgetTracker, { FiftyThirtyTwenty } from '../components/dashboard/BudgetTracker';
 import TransactionLedger from '../components/dashboard/TransactionLedger';
 import GettingStarted from '../components/dashboard/GettingStarted';
+import UploadsCard from '../components/dashboard/UploadsCard';
 import { UploadModal, ClearRecordsModal, BudgetModal, ManualTransactionModal } from '../components/dashboard/DashboardModals';
 import { ForecastCard, RecurringCard } from '../components/dashboard/SpendingInsights';
 import PageHeader from '../components/ui/PageHeader';
@@ -206,6 +207,27 @@ export default function DashboardPage() {
     });
   };
 
+  const [uploadsKey, setUploadsKey] = useState(0);
+  const handleRemoveUpload = async (s) => {
+    const name = s.bank ? `${s.bank} (${s.filename})` : s.filename;
+    const ok = await confirm({
+      title: `Remove ${s.txn_count} ${s.txn_count === 1 ? 'transaction' : 'transactions'} from ${name}?`,
+      body: 'Only this file’s transactions are deleted. Your other uploads, transactions added by hand and budgets stay. This cannot be undone, but you can upload the file again.',
+      action: 'Remove',
+    });
+    if (!ok) return;
+    runAction(async () => {
+      await callApi(`/api/transactions/statements/${s.id}`, { method: 'DELETE' });
+      const list = await loadPeriods();
+      // The month on screen may now be empty: move to the latest month that still has data
+      if (!isAllTime && !list.some((p) => p.year === period.year && p.month === period.month) && list[0]) {
+        setPeriod({ year: list[0].year, month: list[0].month });
+      }
+      await loadDashboardData();
+      setUploadsKey((k) => k + 1);
+    });
+  };
+
   const handleUpdateCategory = (id, category) =>
     runAction(async () => {
       await callApi(`/api/transactions/${id}/category`, jsonBody('PATCH', { category }));
@@ -384,6 +406,8 @@ export default function DashboardPage() {
           <Notice tone="danger" show={Boolean(actionError)}>
             {actionError}
           </Notice>
+
+          <UploadsCard refreshKey={`${uploadsKey}|${allTransactions.length}`} onRemove={handleRemoveUpload} busy={busy} />
 
           <TransactionLedger
             transactions={ledgerTransactions}

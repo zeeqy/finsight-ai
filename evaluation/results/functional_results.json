@@ -1,8 +1,8 @@
 {
   "summary": {
-    "run_at": "2026-11-05T09:42:37.732Z",
-    "total": 139,
-    "pass": 139,
+    "run_at": "2026-11-06T02:33:23.102Z",
+    "total": 140,
+    "pass": 140,
     "fail": 0,
     "blocked": 0
   },
@@ -763,7 +763,7 @@
       "title": "Kahwin beyond the surplus",
       "input": "Needs RM 1,500/mo for 24 months, surplus RM 800",
       "expected": "Not Feasible + date 45 months away",
-      "actual": "RM 1,500, Not Feasible, adjusted to 2030-08-05",
+      "actual": "RM 1,500, Not Feasible, adjusted to 2030-08-06",
       "status": "PASS",
       "detail": null
     },
@@ -1254,6 +1254,16 @@
       "input": "Transaction on 1 Oct 2026",
       "expected": "Ledger returns \"2026-10-01\" (not 30 Sep 16:00 UTC)",
       "actual": "txn_date 2026-10-01",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "M1-33",
+      "module": "M1 Spend Analyser",
+      "title": "Remove one uploaded file",
+      "input": "Same month from three files (Bank Islam PDF, two CSVs), one hand-added transaction, one budget; remove the first CSV; another user tries to remove a file",
+      "expected": "Three uploads listed with bank, dates and totals; removing one deletes only its rows; the others, the hand-added row and the budget stay; another user gets 404",
+      "actual": "3 uploads listed; removed 2 rows of cimb-oct.csv; 4 rows, 2 uploads and the budget remain",
       "status": "PASS",
       "detail": null
     },

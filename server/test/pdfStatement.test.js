@@ -105,6 +105,59 @@ test('PDF statement: AEON Bank layout ("19 Sep 26" dates, RM amounts on the line
   assert.deepEqual(r.checks.bank_total_in, { count: null, amount: 40.02, matches: true });
 });
 
+test('PDF statement: Maybank layout (signed amounts, page break, card hold and release)', () => {
+  // Positions as in a real Maybank Islamic e-statement; names and references are made up
+  const L = (y, ...items) => ({ y, items: items.map(([x, s]) => ({ x, right: x + 6 * s.length, s })) });
+  const top = [L(761, [214, 'Maybank Islamic Berhad (787435-M)']), L(711, [76, 'ALI BIN ABU BAKAR'])];
+  const header = [
+    L(620, [34, 'TARIKH MASUK'], [173, 'BUTIR URUSNIAGA'], [329, 'JUMLAH URUSNIAGA'], [425, 'BAKI PENYATA']),
+    L(609, [38, '進支日期'], [179, '進支項說明']),
+    L(600, [37, 'ENTRY DATE'], [160, 'TRANSACTION DESCRIPTION'], [325, 'TRANSACTION AMOUNT'], [415, 'STATEMENT BALANCE']),
+  ];
+  const page1 = [
+    ...top,
+    ...header,
+    L(588, [88, 'BEGINNING BALANCE'], [457, '100.00']),
+    L(576, [43, '01/06/26'], [88, 'IBK FUND TFR FR A/C'], [370, '10.10-'], [457, '89.90']),
+    L(564, [95, 'KEDAI KOPI MAJU'], [167, '*']),
+    L(552, [95, 'QR72622145']),
+    L(384, [43, '02/06/26'], [88, 'PRE-AUTH MYDEBIT'], [374, '5.00-'], [457, '84.90']),
+    L(372, [95, 'PETROL SATU*']),
+    L(336, [43, '02/06/26'], [88, 'REV PREAUTH MYDEBIT'], [371, '5.00+'], [457, '89.90']),
+    L(324, [95, 'PETROL SATU*']),
+    L(288, [43, '02/06/26'], [88, 'PAYMENT VIA MYDEBIT'], [374, '5.00-'], [457, '84.90']),
+    L(276, [95, 'PETROL SATU*']),
+    L(108, [43, '02/06/26'], [88, 'FUND TRANSFER TO A/'], [367, '1,020.00+'], [450, '1,104.90']),
+    L(88, [25, 'Perhation / Note']),
+  ];
+  const page2 = [
+    ...top,
+    ...header,
+    L(588, [95, 'SITI BINTI SAMAD*']),
+    L(576, [95, 'Duit gaji']),
+    L(564, [43, '30/06/26'], [88, 'PROFIT PAID'], [371, '0.55+'], [450, '1,105.45']),
+    L(492, [88, 'ENDING BALANCE :'], [369, '1,105.45']),
+    L(480, [88, 'TOTAL CREDIT :'], [369, '1,025.55']),
+    L(468, [88, 'TOTAL DEBIT :'], [362, '20.10']),
+  ];
+  const r = parseStatementLines([page1, page2]);
+  assert.equal(r.bank.id, 'maybank'); // not Bank Islam, although "Maybank Islamic" contains "bank Islam"
+  assert.deepEqual(
+    r.rows.map((x) => [x.txn_date, x.direction, x.amount, x.description]),
+    [
+      ['2026-06-01', 'out', 10.1, 'IBK FUND TFR FR A/C KEDAI KOPI MAJU'],
+      ['2026-06-02', 'out', 5, 'PAYMENT VIA MYDEBIT PETROL SATU'],
+      ['2026-06-02', 'in', 1020, 'FUND TRANSFER TO A/ SITI BINTI SAMAD Duit gaji'],
+      ['2026-06-30', 'in', 0.55, 'PROFIT PAID'],
+    ]
+  );
+  assert.equal(r.checks.card_holds_left_out, 1);
+  assert.equal(r.checks.rows_not_matching, 0);
+  assert.equal(r.checks.closing_matches, true);
+  assert.equal(r.checks.bank_total_out.matches, true); // the bank's totals include the hold and its release
+  assert.equal(r.checks.bank_total_in.matches, true);
+});
+
 test('PDF statement: not a PDF, or a PDF with no table', async () => {
   await assert.rejects(parsePdfStatement(Buffer.from('hello')), (e) => e.code === 'PDF_UNREADABLE');
   const noTable = makeStatementPdf({ ...base, rows: [] });

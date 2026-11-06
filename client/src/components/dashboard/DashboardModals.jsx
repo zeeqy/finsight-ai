@@ -15,14 +15,38 @@ function StatusAlert({ status }) {
   );
 }
 
+// Banks whose savings/current account statements have been tried with real files. Keep in step with services/pdfStatement.js.
+const TESTED_BANKS = ['AEON Bank', 'Bank Islam', 'CIMB', 'Maybank'];
+
 // What each bank gives you, as far as it has been tried with FinSight
 const STATEMENT_SOURCES = [
-  { bank: 'CIMB', how: 'The monthly PDF e-statement (tested).' },
-  { bank: 'Bank Islam', how: 'The monthly PDF e-statement or a CSV of your transaction history from Bank Islam online banking (both tested).' },
   { bank: 'AEON Bank', how: 'The monthly PDF e-statement from the AEON Bank app (tested).' },
-  { bank: 'Maybank', how: 'Not tested with a real Maybank statement yet. Try a CSV from Maybank2u or the PDF e-statement.' },
+  { bank: 'Bank Islam', how: 'The monthly PDF e-statement or a CSV of your transaction history from Bank Islam online banking (both tested).' },
+  { bank: 'CIMB', how: 'The monthly PDF e-statement (tested).' },
+  { bank: 'Maybank', how: 'The monthly PDF e-statement from Maybank2u (tested). A Maybank2u CSV has not been tested yet.' },
   { bank: 'Other banks', how: 'Try the PDF e-statement. You will see what was found, and whether it adds up, before anything is saved.' },
 ];
+
+/** Which banks are tested and what is not supported, shown before the user picks a file. */
+function SupportedBanks() {
+  return (
+    <div className="mt-3 rounded-xl bg-paper-2 px-3 py-2.5 text-sm">
+      <p className="font-semibold">Tested with real statements</p>
+      <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label="Tested banks">
+        {TESTED_BANKS.map((b) => (
+          <li key={b} className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-0.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-ok" aria-hidden="true" />
+            {b}
+          </li>
+        ))}
+      </ul>
+      <p className="t-note mt-2">
+        Savings and current account statements only. Other banks are not tested yet: they may still work, and the preview shows whether
+        every amount adds up before anything is saved. Credit card statements and scanned or photographed statements cannot be read.
+      </p>
+    </div>
+  );
+}
 
 const fmtDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -38,6 +62,10 @@ function pdfCheckLines(preview) {
   }
   if (c.closing_matches === true) lines.push({ tone: 'ok', text: `Ends on the statement's closing balance, ${fmtRM(c.closing_balance)}.` });
   if (c.closing_matches === false) lines.push({ tone: 'warn', text: `Does not end on the closing balance of ${fmtRM(c.closing_balance)}. Some rows may be missing.` });
+  if (c.card_holds_left_out > 0) {
+    const n = c.card_holds_left_out;
+    lines.push({ tone: 'ok', text: `${n} card ${n === 1 ? 'hold' : 'holds'} (for example at a petrol pump) and ${n === 1 ? 'its release are' : 'their releases are'} left out, because they cancel out. The real payments are kept.` });
+  }
   for (const [key, word] of [['bank_total_out', 'money out'], ['bank_total_in', 'money in']]) {
     const t = c[key];
     if (!t) continue;
@@ -281,6 +309,7 @@ export function UploadModal({ onClose, onUpload, onPreview }) {
         aria-label="Bank statement PDF, CSV or XLSX"
         onChange={(e) => handleFile(e.target.files[0])}
       />
+      <SupportedBanks />
       <details className="mt-3 rounded-xl border border-line px-3 py-2">
         <summary className="cursor-pointer font-semibold text-sm">Where do I get my statement?</summary>
         <p className="t-note mt-2">
@@ -448,6 +477,7 @@ export function ClearRecordsModal({ period, isAllTime, monthCount, totalCount, o
           )}
         {option('all', 'Delete all transactions', `Deletes all ${totalCount} transactions across every month so you can start again.`, 'border-danger bg-danger-wash')}
       </div>
+      <p className="t-note mt-3">To remove one bank's file only, close this and use Remove under "Your uploads" above the transaction list.</p>
 
       <Notice tone="danger" show={Boolean(error)} className="mt-3">
         {error}

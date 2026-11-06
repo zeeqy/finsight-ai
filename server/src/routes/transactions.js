@@ -248,6 +248,7 @@ router.post('/upload', handleStatementUpload, async (req, res) => {
   let rows = [];
   let parsedTxns = [];
   let pdf = null;
+  let csvBank = null; // the bank, when a CSV/XLSX export can be recognised by its columns
 
   try {
     if (isPdf) {
@@ -293,6 +294,7 @@ router.post('/upload', handleStatementUpload, async (req, res) => {
 
       // 2. Check the header looks like a bank statement (must have an amount column)
       const headerKeys = Object.keys(rows[0]).map((k) => k.trim().toLowerCase());
+      if (headerKeys.includes('reference 1')) csvBank = 'Bank Islam'; // CASATIA transaction history export
       if (!headerKeys.some((k) => AMOUNT_COLUMNS.includes(k))) {
         return res.status(422).json({
           success: false,
@@ -411,8 +413,8 @@ router.post('/upload', handleStatementUpload, async (req, res) => {
 
     // 4. Pass 2: write statement + transactions
     const [statementResult] = await db.query(
-      'INSERT INTO bank_statements (user_id, filename) VALUES (?, ?)',
-      [userId, originalName]
+      'INSERT INTO bank_statements (user_id, filename, bank, file_type) VALUES (?, ?, ?, ?)',
+      [userId, originalName, pdf ? (pdf.bank.id === 'other' ? null : pdf.bank.name) : csvBank, isPdf ? 'pdf' : isXlsx ? 'xlsx' : 'csv']
     );
     const statementId = statementResult.insertId;
 
@@ -809,6 +811,73 @@ router.patch('/:id/category', async (req, res) => {
   } catch (error) {
     console.error('Update category error:', error);
     return res.status(500).json({ success: false, message: 'Failed to update category.' });
+  }
+});
+
+/**
+ * GET /api/transactions/statements
+ * "Your uploads": one entry per uploaded file that still has transactions, with its bank, the dates it
+ * covers and its totals, so the user can remove one bank's file without touching the others.
+ */
+router.get('/statements', requireMysql, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const [rows] = await db.query(
+      `SELECT s.id, s.filename, s.bank, s.file_type, s.uploaded_at,
+              COUNT(t.id) AS txn_count, MIN(t.txn_date) AS first_date, MAX(t.txn_date) AS last_date,
+              SUM(CASE WHEN t.category = 'Income' THEN t.amount ELSE 0 END) AS money_in,
+              SUM(CASE WHEN t.category <> 'Income' THEN t.amount ELSE 0 END) AS money_out
+         FROM bank_statements s
+         JOIN transactions t ON t.statement_id = s.id AND t.user_id = s.user_id
+        WHERE s.user_id = ?
+        GROUP BY s.id, s.filename, s.bank, s.file_type, s.uploaded_at
+        ORDER BY s.uploaded_at DESC, s.id DESC`,
+      [userId]
+    );
+    const [[manual]] = await db.query('SELECT COUNT(*) AS n FROM transactions WHERE user_id = ? AND statement_id IS NULL', [userId]);
+    return res.json({
+      success: true,
+      data: {
+        statements: rows.map((r) => ({
+          ...r,
+          txn_count: Number(r.txn_count),
+          money_in: Math.round(Number(r.money_in) * 100) / 100,
+          money_out: Math.round(Number(r.money_out) * 100) / 100,
+        })),
+        manual_count: Number(manual.n),
+      },
+    });
+  } catch (error) {
+    console.error('List uploads error:', error);
+    return res.status(500).json({ success: false, message: 'Could not load your uploads.' });
+  }
+});
+
+/**
+ * DELETE /api/transactions/statements/:id
+ * Remove one uploaded file and only its transactions. Other files, transactions added by hand and
+ * budgets stay. Anomaly flags are worked out again, because each category's average changes.
+ */
+router.delete('/statements/:id', requireMysql, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const statementId = parseInt(req.params.id, 10);
+    const [[statement]] = await db.query('SELECT id, filename, bank FROM bank_statements WHERE id = ? AND user_id = ?', [statementId, userId]);
+    if (!statement) {
+      return res.status(404).json({ success: false, message: 'That upload was not found.' });
+    }
+    const [result] = await db.query('DELETE FROM transactions WHERE user_id = ? AND statement_id = ?', [userId, statementId]);
+    await db.query('DELETE FROM bank_statements WHERE id = ? AND user_id = ?', [statementId, userId]);
+    await recomputeUserAnomalies(userId);
+    const deleted = result.affectedRows || 0;
+    return res.json({
+      success: true,
+      message: `Removed ${deleted} ${deleted === 1 ? 'transaction' : 'transactions'} from ${statement.bank ? `${statement.bank} (${statement.filename})` : statement.filename}. Your other uploads were not changed.`,
+      deletedCount: deleted,
+    });
+  } catch (error) {
+    console.error('Delete upload error:', error);
+    return res.status(500).json({ success: false, message: 'Could not remove that upload.' });
   }
 });
 
