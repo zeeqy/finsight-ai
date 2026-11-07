@@ -6,6 +6,7 @@
 const express = require('express');
 const db = require('../db');
 const authenticateToken = require('../middleware/auth');
+const { checkLimiter } = require('../middleware/userLimiter');
 const requireMysql = require('../middleware/requireMysql');
 const {
   LOAN_CONFIG,
@@ -225,7 +226,7 @@ router.post('/calculate', (req, res) => {
 });
 
 // POST /api/loan/predict — calculate + default risk + verdict + tips, saved to loan_predictions
-router.post('/predict', requireMysql, async (req, res) => {
+router.post('/predict', requireMysql, checkLimiter, async (req, res) => {
   try {
     const a = assess(req.body);
     const { calc, profile } = a;

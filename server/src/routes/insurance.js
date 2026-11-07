@@ -6,6 +6,7 @@
 const express = require('express');
 const db = require('../db');
 const authenticateToken = require('../middleware/auth');
+const { checkLimiter } = require('../middleware/userLimiter');
 const requireMysql = require('../middleware/requireMysql');
 const { mlPost, checkMlHealth } = require('../services/mlClient');
 const { INSURANCE_CONFIG, calculateBmi, bmiCategory, buildTips } = require('../services/insuranceRisk');
@@ -81,7 +82,7 @@ router.get('/config', async (req, res) => {
 });
 
 // POST /api/insurance/predict — ML score + SHAP + tips, saved to insurance_predictions
-router.post('/predict', requireMysql, async (req, res) => {
+router.post('/predict', requireMysql, checkLimiter, async (req, res) => {
   try {
     const input = parseBody(req.body);
     const prediction = await mlPost('/predict/insurance', {
@@ -118,7 +119,7 @@ router.post('/predict', requireMysql, async (req, res) => {
 
 // POST /api/insurance/protection { dependants, existing_cover, support_years }
 // Emergency cover and a needs-based protection gap from the user's own figures
-router.post('/protection', requireMysql, async (req, res) => {
+router.post('/protection', requireMysql, checkLimiter, async (req, res) => {
   try {
     const dependants = Math.max(0, Math.round(parseFloat(req.body.dependants) || 0));
     const existingCover = Math.max(0, parseFloat(req.body.existing_cover) || 0);
@@ -207,7 +208,7 @@ router.delete('/quotes/:id', requireMysql, async (req, res) => {
 });
 
 // POST /api/insurance/quotes/compare { example_bill, dependants, support_years, existing_cover }
-router.post('/quotes/compare', requireMysql, async (req, res) => {
+router.post('/quotes/compare', requireMysql, checkLimiter, async (req, res) => {
   try {
     const [rows] = await db.query(QUOTE_SELECT, [req.user.id]);
     if (rows.length === 0) throw new RangeError('Add at least one quote to compare.');

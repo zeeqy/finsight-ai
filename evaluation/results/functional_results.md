@@ -1,10 +1,10 @@
 # FinSight AI functional test results
 
-Run 2026-11-06T04:10:47.863Z. **141 of 141 passed**, 0 failed, 0 blocked.
+Run 2026-11-06T08:14:26.414Z. **144 of 144 passed**, 0 failed, 0 blocked.
 
 | Area | Cases | Pass | Fail | Blocked |
 |---|---|---|---|---|
-| Authentication & security | 25 | 25 | 0 | 0 |
+| Authentication & security | 28 | 28 | 0 | 0 |
 | M1 Spend Analyser | 32 | 32 | 0 | 0 |
 | M1 Budgets | 4 | 4 | 0 | 0 |
 | M2 AI Advisor | 6 | 6 | 0 | 0 |
@@ -44,6 +44,9 @@ Run 2026-11-06T04:10:47.863Z. **141 of 141 passed**, 0 failed, 0 blocked.
 | SEC-07 | Production settings | NODE_ENV=production: headers, CORS from another site and from the real site, the web app, an unknown API path | CSP, HSTS, nosniff, no X-Powered-By; no CORS header for another site; web app at /; 404 JSON | Headers set, other sites refused, app served, 404 JSON | PASS |
 | SEC-08 | Sign-up limit per visitor | Limit 3 an hour: 4 sign-ups from one IP behind the proxy, then 1 from another IP | 3 created, the 4th 429 TOO_MANY_SIGNUPS, another visitor still 201 (real IPs are used, not the proxy's) | 3 then 429; another IP unaffected | PASS |
 | SEC-09 | Advisor daily limit | Limit 2 questions per 24 hours, no LLM key: three questions | Two answered, the third 429 ADVISOR_DAILY_LIMIT saying when to ask again | Third refused with a wait time | PASS |
+| SEC-10 | Sign-ins end after a password change or account deletion | Two sign-ins (two devices); change the password on the first; then delete the account | Old sign-ins 401 SIGNED_OUT after the change, the device that changed it gets a new working token; after deletion that token 401 ACCOUNT_GONE | Both old sign-ins 401 SIGNED_OUT; new token works; after deletion 401 ACCOUNT_GONE | PASS |
+| SEC-11 | Password rule | Sign-up with 7 characters, "password123", the email itself; a password change to "malaysia123"; then a 12-character password | 400 WEAK_PASSWORD three times, 422 WEAK_PASSWORD for the change, then 201 | Short, common and email-as-password refused; a 12-character passphrase accepted | PASS |
+| SEC-12 | Per-user limits on heavy requests | Production with 2 checks and 2 uploads an hour: three decision checks, three statement uploads, then another user | Third check 429 CHECK_LIMIT and third upload 429 UPLOAD_LIMIT, each with Retry-After; another user is not affected | Third check and third upload 429 with Retry-After; another user unaffected | PASS |
 
 ## M1 Spend Analyser
 

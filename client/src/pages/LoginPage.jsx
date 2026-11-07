@@ -25,9 +25,12 @@ export default function LoginPage({ onSwitchToRegister }) {
     }
   };
 
+  // Local development only: on a public site a shared account with a published password would let
+  // visitors see each other's uploads or lock the account. Set VITE_DEMO_ACCOUNT=true to show it anyway.
+  const showDemo = import.meta.env.DEV || import.meta.env.VITE_DEMO_ACCOUNT === 'true';
   const fillDemoAccount = () => {
     setEmail('haziq@example.com');
-    setPassword('password123');
+    setPassword('oyen-demo-2026');
     setError('');
   };
 
@@ -53,9 +56,11 @@ export default function LoginPage({ onSwitchToRegister }) {
         </button>
       </form>
 
-      <button type="button" onClick={fillDemoAccount} className="btn btn-quiet w-full mt-2.5">
-        Use the demo account
-      </button>
+      {showDemo && (
+        <button type="button" onClick={fillDemoAccount} className="btn btn-quiet w-full mt-2.5">
+          Use the demo account
+        </button>
+      )}
 
       <p className="t-note mt-5 text-center">
         New here?{' '}

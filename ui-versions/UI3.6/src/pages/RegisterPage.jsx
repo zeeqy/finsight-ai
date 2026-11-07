@@ -31,8 +31,8 @@ export default function RegisterPage({ onSwitchToLogin }) {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters.');
       return;
     }
 
@@ -78,7 +78,7 @@ export default function RegisterPage({ onSwitchToLogin }) {
         <Field label="Email">
           <input type="email" name="email" autoComplete="email" value={formData.email} onChange={handleChange} placeholder="email@example.com" required />
         </Field>
-        <Field label="Password" hint="At least 6 characters">
+        <Field label="Password" hint="At least 8 characters, not a common password">
           <input type="password" name="password" autoComplete="new-password" value={formData.password} onChange={handleChange} required />
         </Field>
         <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-3">

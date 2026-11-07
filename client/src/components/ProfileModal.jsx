@@ -15,7 +15,7 @@ const GROUPS = [
 
 /** Change the password: current one first, so a borrowed signed-in screen cannot lock the owner out. */
 function PasswordForm() {
-  const { authFetch } = useAuth();
+  const { authFetch, replaceToken } = useAuth();
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -34,7 +34,8 @@ function PasswordForm() {
       if (!json.success) throw new Error(json.message);
       setCurrent('');
       setNext('');
-      setStatus({ tone: 'ok', text: 'Password changed. Use the new one next time you sign in.' });
+      replaceToken(json.token);
+      setStatus({ tone: 'ok', text: 'Password changed. Other devices signed in to this account are signed out; use the new password next time.' });
     } catch (err) {
       setStatus({ tone: 'danger', text: err.message || 'Could not change your password.' });
     }
@@ -54,8 +55,8 @@ function PasswordForm() {
         <Field label="Current password">
           <input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" required />
         </Field>
-        <Field label="New password" hint="At least 6 characters">
-          <input type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" minLength={6} required />
+        <Field label="New password" hint="At least 8 characters, not a common password">
+          <input type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" minLength={8} required />
         </Field>
       </div>
       <Notice tone={status?.tone || 'info'} show={Boolean(status)}>
@@ -65,7 +66,7 @@ function PasswordForm() {
         <button type="button" onClick={() => setOpen(false)} className="btn btn-quiet">
           Cancel
         </button>
-        <button type="submit" disabled={!current || next.length < 6 || status?.tone === 'working'} className="btn btn-accent">
+        <button type="submit" disabled={!current || next.length < 8 || status?.tone === 'working'} className="btn btn-accent">
           Change password
         </button>
       </div>

@@ -13,6 +13,7 @@
 const express = require('express');
 const db = require('../db');
 const authenticateToken = require('../middleware/auth');
+const { checkLimiter } = require('../middleware/userLimiter');
 const requireMysql = require('../middleware/requireMysql');
 const { getFinancialProfile } = require('../services/financialProfile');
 const { simulateDecision, currentHealth } = require('../services/decisionSimulator');
@@ -105,7 +106,7 @@ router.get('/health', async (req, res) => {
   }
 });
 
-router.post('/simulate', async (req, res) => {
+router.post('/simulate', checkLimiter, async (req, res) => {
   try {
     return res.json({ success: true, data: await simulateDecision(req.user.id, req.body || {}) });
   } catch (err) {

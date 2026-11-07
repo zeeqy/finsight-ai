@@ -131,7 +131,8 @@ async function readPdfLines(buffer, password) {
       page.cleanup();
     }
   } finally {
-    await doc.destroy();
+    // pdf.js 6 closes a document through its loading task (PDFDocumentProxy.destroy was removed)
+    await doc.loadingTask.destroy();
   }
   return pages;
 }

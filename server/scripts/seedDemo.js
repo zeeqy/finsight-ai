@@ -2,7 +2,9 @@
 // statements and budgets. Needs the API running on :5000. Usage: node server/scripts/seedDemo.js
 const API = process.env.API || 'http://localhost:5000';
 const EMAIL = 'haziq@example.com';
-const PASSWORD = 'password123';
+// Local default. On the public server pass your own: DEMO_PASSWORD=... node scripts/seedDemo.js
+const PASSWORD = process.env.DEMO_PASSWORD || 'oyen-demo-2026';
+const OLD_PASSWORD = 'password123'; // before the 8-character, not-common rule (Nov 2026)
 
 const SPENDING = [
   ['RESTORAN AL-AZIZ SHAH ALAM', 'MyDEBIT SA PURCHASE', 14],
@@ -56,6 +58,14 @@ const post = (path, body, token) =>
 
 (async () => {
   let auth = await post('/api/auth/login', { email: EMAIL, password: PASSWORD });
+  if (!auth.token) {
+    // An older demo account still has the old password: move it to the new one
+    const old = await post('/api/auth/login', { email: EMAIL, password: OLD_PASSWORD });
+    if (old.token) {
+      const changed = await post('/api/auth/me/password', { current_password: OLD_PASSWORD, new_password: PASSWORD }, old.token);
+      if (changed.token) auth = { ...old, token: changed.token };
+    }
+  }
   if (!auth.token) {
     auth = await post('/api/auth/register', { full_name: 'Haziq Danish', email: EMAIL, password: PASSWORD, monthly_income: 4500, age: 24, accept_terms: true });
   }

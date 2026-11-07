@@ -21,7 +21,8 @@ You do the account steps yourself (Oracle, DuckDNS, GitHub, Google AI Studio). C
 - [ ] `DATA_LOCATION` is set (for example `Singapore (Oracle Cloud)`). PDPA asks you to say where data is kept.
 - [ ] The Gemini key comes from a project **with billing turned on**. On the free tier Google may use requests to improve its products, and the advisor sends users' figures. Set a budget alert in Google Cloud so a spike cannot surprise you.
 - [ ] The GitHub repository is **private**. It holds your code, your report evidence and a few merchant names from your own statement in `server/src/utils/categorizer.js`.
-- [ ] Daily backups are on (step 7) and you have restored one once to check it works.
+- [ ] Daily backups are on (step 7): encrypted, copied off the server, and you have restored one once to check it works.
+- [ ] If you made the demo account (step 6), it has your own password, not the one in `seedDemo.js`.
 - [ ] A free uptime monitor watches `https://YOUR-DOMAIN/api/health` (for example UptimeRobot).
 - [ ] You know what to do if there is a data breach: take the site offline (`docker compose down`), find out what was exposed, tell the affected users and, under the PDPA (Amendment) Act 2024, the Personal Data Protection Commissioner.
 
@@ -107,31 +108,53 @@ The first build takes several minutes (Python packages for ARM). When the log sa
 Optional demo account for your supervisor and examiners (same data as on your laptop):
 
 ```bash
-docker compose exec app node scripts/seedDemo.js
+docker compose exec -e DEMO_PASSWORD='choose-a-long-password' app node scripts/seedDemo.js
 ```
 
-Anyone who knows the demo password can change or delete that account, so share it only with people you trust.
+Always pass your own `DEMO_PASSWORD`: the default in `seedDemo.js` is in your code. The "Use the demo account" button only appears in local development, so the live sign-in page does not give the password away. Anyone you give it to can change or delete that account, and sees whatever others upload to it, so share it only with your supervisor and examiners, and remove the account after the viva (Your data and privacy → Delete account).
 
 ## 7. Backups
 
+Backups hold every user's financial data, so they are encrypted and a copy is kept off the server. The script refuses to run without encryption.
+
+**On your own laptop (once):** install [age](https://github.com/FiloSottile/age) (Windows: `winget install FiloSottile.age`) and make a key pair:
+
 ```bash
-chmod +x deploy/backup.sh
+age-keygen -o finsight-backup-key.txt
+```
+
+It prints a public key starting `age1…`. Keep `finsight-backup-key.txt` private and **off the server** (for example in your password manager and on a USB stick). Without it the backups cannot be opened, by you or anyone else.
+
+**On the server:**
+
+```bash
+sudo apt install -y age rclone
+nano .env      # add BACKUP_AGE_RECIPIENT=age1… (the public key) and, after the next step, BACKUP_REMOTE
+rclone config  # optional but recommended: add a remote, e.g. "gdrive" for a Google Drive folder
+```
+
+Set `BACKUP_REMOTE=gdrive:finsight-backups` (your remote name and folder). Run one backup by hand and check the log line says "copied to":
+
+```bash
+bash deploy/backup.sh
 crontab -e
 ```
 
-Add this line (03:15 every day, keeps 14 days):
+Add this line (03:15 every day; the server keeps 14 days, the off-site copy 60 days):
 
 ```
-15 3 * * * cd /home/ubuntu/finsight && sh deploy/backup.sh >> backups/backup.log 2>&1
+15 3 * * * cd /home/ubuntu/finsight && bash deploy/backup.sh >> backups/backup.log 2>&1
 ```
 
-Copy a backup off the server now and then (`scp ubuntu@YOUR-SERVER-IP:finsight/backups/*.gz .`). Backups hold real users' data: keep them private.
-
-Restore (this replaces the current data):
+**Restore** (this replaces the current data). Decrypt on your laptop, where the private key is, then send the plain dump to the server only for the restore and delete it afterwards:
 
 ```bash
-gunzip -c backups/finsight_DATE.sql.gz | docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" finsight_ai'
+age -d -i finsight-backup-key.txt finsight_DATE.sql.gz.age > finsight_DATE.sql.gz
+scp finsight_DATE.sql.gz ubuntu@YOUR-SERVER-IP:finsight/
+ssh ubuntu@YOUR-SERVER-IP "cd finsight && gunzip -c finsight_DATE.sql.gz | docker compose exec -T mysql sh -c 'mysql -uroot -p\"$MYSQL_ROOT_PASSWORD\" finsight_ai' && rm finsight_DATE.sql.gz"
 ```
+
+Do one practice restore before launch (on a fresh test database or right after the first backup), so you know the key and the steps work.
 
 ## 8. Updating the site
 

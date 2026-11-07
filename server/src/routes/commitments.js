@@ -6,6 +6,7 @@
 const express = require('express');
 const db = require('../db');
 const authenticateToken = require('../middleware/auth');
+const { checkLimiter } = require('../middleware/userLimiter');
 const requireMysql = require('../middleware/requireMysql');
 const { COMMITMENT_KINDS, summariseCommitments } = require('../services/financialProfile');
 const { planPayoff } = require('../services/debtPlanner');
@@ -92,7 +93,7 @@ router.post('/', async (req, res) => {
 });
 
 // POST /api/commitments/payoff-plan { extra_monthly } — avalanche vs snowball over the saved debts
-router.post('/payoff-plan', async (req, res) => {
+router.post('/payoff-plan', checkLimiter, async (req, res) => {
   try {
     const extra = parseFloat(req.body.extra_monthly) || 0;
     if (extra < 0 || extra > 1e7) throw new RangeError('Extra payment must be RM 0 or more.');

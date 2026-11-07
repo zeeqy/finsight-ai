@@ -10,6 +10,7 @@ const path = require('path');
 const csv = require('csv-parser');
 const db = require('../db');
 const authenticateToken = require('../middleware/auth');
+const { uploadLimiter } = require('../middleware/userLimiter');
 const { computeAnomalyFlags } = require('../utils/categorizer');
 const { categoriseBatch } = require('../services/categoryModel');
 const { getSpendingInsights } = require('../services/spendingInsights');
@@ -232,7 +233,7 @@ function parseTxnDate(rawDate) {
  * Form fields: `statement` (the file), `password` (locked PDFs only; used once, never stored)
  * and `preview=true` (PDF: read and check the file, return what would be imported, save nothing).
  */
-router.post('/upload', handleStatementUpload, async (req, res) => {
+router.post('/upload', uploadLimiter, handleStatementUpload, async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'Please attach a bank statement: a PDF e-statement, CSV or XLSX file.' });
   }

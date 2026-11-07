@@ -4,7 +4,6 @@
 
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const db = require('../db');
 const authenticateToken = require('../middleware/auth');
 const requireMysql = require('../middleware/requireMysql');
@@ -14,8 +13,8 @@ const { registerLimiter, recordSignup } = require('../middleware/registerLimiter
 const { REFERENCE_BUDGETS } = require('../data/referenceBudgets');
 
 const router = express.Router();
-const { JWT_SECRET, JWT_EXPIRES_IN } = authenticateToken;
-const MIN_PASSWORD_LENGTH = 6; // same rule as RegisterPage.jsx
+const { signToken } = authenticateToken;
+const { passwordProblem } = require('../services/passwordPolicy'); // 8+ characters, not a common password (RegisterPage.jsx shows the same rule)
 const MIN_AGE = 18; // FinSight is for adults (the sign-up box confirms it)
 
 // POST /api/auth/register
@@ -34,12 +33,8 @@ router.post('/register', registerLimiter, async (req, res) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
       return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
     }
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      return res.status(400).json({
-        success: false,
-        message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
-      });
-    }
+    const weak = passwordProblem(password, { email: cleanEmail, fullName: full_name });
+    if (weak) return res.status(400).json({ success: false, code: 'WEAK_PASSWORD', message: weak });
 
     if (String(full_name).trim().length > 100) {
       return res.status(400).json({ success: false, message: 'Your name must be 100 characters or fewer.' });
@@ -91,15 +86,7 @@ router.post('/register', registerLimiter, async (req, res) => {
     recordSignup(req);
 
     // Create JWT
-    const token = jwt.sign(
-      {
-        id: userId,
-        email: cleanEmail,
-        full_name: full_name.trim(),
-      },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
-    );
+    const token = signToken({ id: userId, email: cleanEmail, full_name: full_name.trim(), token_version: 0 });
 
     return res.status(201).json({
       success: true,
@@ -161,15 +148,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     clearLoginFailures(req);
 
     // Generate JWT
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-      },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
-    );
+    const token = signToken(user);
 
     return res.json({
       success: true,
@@ -278,18 +257,20 @@ router.post('/me/password', authenticateToken, requireMysql, async (req, res) =>
   try {
     const { current_password: current, new_password: next } = req.body || {};
     if (!current || !next) return res.status(400).json({ success: false, message: 'Enter your current and new password.' });
-    if (String(next).length < MIN_PASSWORD_LENGTH) {
-      return res.status(422).json({ success: false, message: `Your new password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
-    }
-    const [users] = await db.query('SELECT id, password_hash FROM users WHERE id = ?', [req.user.id]);
+    const [users] = await db.query('SELECT id, email, full_name, password_hash FROM users WHERE id = ?', [req.user.id]);
     if (!users.length) return res.status(404).json({ success: false, message: 'User not found.' });
+    const weak = passwordProblem(next, { email: users[0].email, fullName: users[0].full_name });
+    if (weak) return res.status(422).json({ success: false, code: 'WEAK_PASSWORD', message: weak });
     if (!(await bcrypt.compare(current, users[0].password_hash))) {
       // 422, not 401, so the client does not sign out
       return res.status(422).json({ success: false, message: 'Your current password is not right. Nothing was changed.' });
     }
     const hash = await bcrypt.hash(String(next), 10);
-    await db.query('UPDATE users SET password_hash = ? WHERE id = ?', [hash, req.user.id]);
-    return res.json({ success: true, message: 'Password changed.' });
+    // Raising token_version signs out every other device; this one gets a fresh token
+    await db.query('UPDATE users SET password_hash = ?, token_version = token_version + 1 WHERE id = ?', [hash, req.user.id]);
+    const [[fresh]] = await db.query('SELECT token_version FROM users WHERE id = ?', [req.user.id]);
+    const token = signToken({ ...users[0], token_version: fresh.token_version });
+    return res.json({ success: true, message: 'Password changed. Other devices are signed out.', token });
   } catch (error) {
     console.error('Password change error:', error);
     return res.status(500).json({ success: false, message: 'Failed to change your password.' });

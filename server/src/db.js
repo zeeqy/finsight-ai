@@ -360,7 +360,8 @@ async function initDatabase() {
 
     // Health check: emergency savings and household type (for the Belanjawanku reference budget)
     // terms_accepted_at: when the sign-up box (18 or older, Terms of use) was ticked
-    for (const col of ['emergency_savings DECIMAL(12, 2) NULL', 'household_type VARCHAR(30) NULL', 'terms_accepted_at DATETIME NULL']) {
+    // token_version: raised on a password change, so sign-ins issued before it stop working
+    for (const col of ['emergency_savings DECIMAL(12, 2) NULL', 'household_type VARCHAR(30) NULL', 'terms_accepted_at DATETIME NULL', 'token_version INT NOT NULL DEFAULT 0']) {
       try {
         await pool.query(`ALTER TABLE users ADD COLUMN ${col}`);
       } catch (err) {

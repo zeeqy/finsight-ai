@@ -90,6 +90,9 @@ export function AuthProvider({ children }) {
   // After the profile is edited, so the sidebar and pages show the new name and income straight away
   const updateUser = useCallback((fields) => setUser((prev) => (prev ? { ...prev, ...fields } : prev)), []);
 
+  // After a password change the server ends every older sign-in and sends this device a new token
+  const replaceToken = useCallback((next) => next && setToken(next), []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -101,6 +104,7 @@ export function AuthProvider({ children }) {
         register,
         logout,
         updateUser,
+        replaceToken,
         authFetch,
       }}
     >

@@ -1,8 +1,8 @@
 {
   "summary": {
-    "run_at": "2026-11-06T04:10:47.863Z",
-    "total": 141,
-    "pass": 141,
+    "run_at": "2026-11-06T08:14:26.414Z",
+    "total": 144,
+    "pass": 144,
     "fail": 0,
     "blocked": 0
   },
@@ -1364,6 +1364,36 @@
       "input": "Limit 2 questions per 24 hours, no LLM key: three questions",
       "expected": "Two answered, the third 429 ADVISOR_DAILY_LIMIT saying when to ask again",
       "actual": "Third refused with a wait time",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "SEC-10",
+      "module": "Authentication & security",
+      "title": "Sign-ins end after a password change or account deletion",
+      "input": "Two sign-ins (two devices); change the password on the first; then delete the account",
+      "expected": "Old sign-ins 401 SIGNED_OUT after the change, the device that changed it gets a new working token; after deletion that token 401 ACCOUNT_GONE",
+      "actual": "Both old sign-ins 401 SIGNED_OUT; new token works; after deletion 401 ACCOUNT_GONE",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "SEC-11",
+      "module": "Authentication & security",
+      "title": "Password rule",
+      "input": "Sign-up with 7 characters, \"password123\", the email itself; a password change to \"malaysia123\"; then a 12-character password",
+      "expected": "400 WEAK_PASSWORD three times, 422 WEAK_PASSWORD for the change, then 201",
+      "actual": "Short, common and email-as-password refused; a 12-character passphrase accepted",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "id": "SEC-12",
+      "module": "Authentication & security",
+      "title": "Per-user limits on heavy requests",
+      "input": "Production with 2 checks and 2 uploads an hour: three decision checks, three statement uploads, then another user",
+      "expected": "Third check 429 CHECK_LIMIT and third upload 429 UPLOAD_LIMIT, each with Retry-After; another user is not affected",
+      "actual": "Third check and third upload 429 with Retry-After; another user unaffected",
       "status": "PASS",
       "detail": null
     },

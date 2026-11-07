@@ -1731,6 +1731,85 @@ async function launchTests() {
     return 'Third refused with a wait time';
   });
 
+  await tc(
+    'SEC-10',
+    M,
+    'Sign-ins end after a password change or account deletion',
+    'Two sign-ins (two devices); change the password on the first; then delete the account',
+    'Old sign-ins 401 SIGNED_OUT after the change, the device that changed it gets a new working token; after deletion that token 401 ACCOUNT_GONE',
+    async () => {
+      const v = await newUser('signout');
+      const other = (await post('/api/auth/login', { email: v.email, password: v.password })).data.token;
+      check((await get('/api/auth/me', other)).status === 200, 'second device not signed in');
+      const changed = await post('/api/auth/me/password', { current_password: v.password, new_password: 'a-new-pass-2026' }, v.token);
+      check(changed.status === 200 && changed.data.token, `change: ${changed.status}`);
+      for (const [name, t] of [['first device (old token)', v.token], ['second device', other]]) {
+        const r = await get('/api/auth/me', t);
+        check(r.status === 401 && r.data.code === 'SIGNED_OUT', `${name}: ${r.status} ${r.data?.code}`);
+      }
+      check((await get('/api/auth/me', changed.data.token)).status === 200, 'new token refused');
+      const gone = await api(MAIN, 'DELETE', '/api/auth/me', { token: changed.data.token, body: { password: 'a-new-pass-2026' } });
+      check(gone.status === 200, `delete: ${gone.status}`);
+      const after = await get('/api/transactions/periods', changed.data.token);
+      check(after.status === 401 && after.data.code === 'ACCOUNT_GONE', `after delete: ${after.status} ${after.data?.code}`);
+      return 'Both old sign-ins 401 SIGNED_OUT; new token works; after deletion 401 ACCOUNT_GONE';
+    }
+  );
+
+  await tc(
+    'SEC-11',
+    M,
+    'Password rule',
+    'Sign-up with 7 characters, "password123", the email itself; a password change to "malaysia123"; then a 12-character password',
+    '400 WEAK_PASSWORD three times, 422 WEAK_PASSWORD for the change, then 201',
+    async () => {
+      const email = `ft-${RUN_ID}-pwrule@finsight.test`;
+      createdEmails.push(email);
+      const base = { full_name: 'Rule Test', email, monthly_income: 3000, age: 30, accept_terms: true };
+      for (const password of ['abc1234', 'password123', email]) {
+        const r = await post('/api/auth/register', { ...base, password });
+        check(r.status === 400 && r.data.code === 'WEAK_PASSWORD', `"${password}": ${r.status} ${r.data?.code}`);
+      }
+      const ok = await post('/api/auth/register', { ...base, password: 'kopi-o-ais-26' });
+      check(ok.status === 201, `valid: ${ok.status}`);
+      const change = await post('/api/auth/me/password', { current_password: 'kopi-o-ais-26', new_password: 'malaysia123' }, ok.data.token);
+      check(change.status === 422 && change.data.code === 'WEAK_PASSWORD', `change: ${change.status}`);
+      return 'Short, common and email-as-password refused; a 12-character passphrase accepted';
+    }
+  );
+
+  await tc(
+    'SEC-12',
+    M,
+    'Per-user limits on heavy requests',
+    'Production with 2 checks and 2 uploads an hour: three decision checks, three statement uploads, then another user',
+    'Third check 429 CHECK_LIMIT and third upload 429 UPLOAD_LIMIT, each with Retry-After; another user is not affected',
+    async () => {
+      const ip = '192.0.2.99';
+      const u = await prodUser('heavy', ip);
+      check(u.status === 201, `sign-up: ${u.status}`);
+      const sim = () => prodApi('POST', '/api/profile/simulate', { ip, token: u.token, body: { type: 'purchase', amount: 500 } });
+      const s1 = await sim();
+      const s2 = await sim();
+      check(s1.status !== 429 && s2.status !== 429, `early limit: ${s1.status} ${s2.status}`);
+      const s3 = await sim();
+      check(s3.status === 429 && s3.data.code === 'CHECK_LIMIT' && Number(s3.headers.get('retry-after')) > 0, `third check: ${s3.status} ${s3.data?.code}`);
+      const upload = async (n) => {
+        const form = new FormData();
+        form.append('statement', new Blob([`Date,Description,Amount\n2026-10-0${n},JAYA GROCER KL,-1${n}.00\n`], { type: 'text/csv' }), `limit${n}.csv`);
+        const res = await fetch(`${PROD}/api/transactions/upload`, { method: 'POST', headers: { 'X-Forwarded-For': ip, Authorization: `Bearer ${u.token}` }, body: form });
+        return { status: res.status, data: await res.json().catch(() => null), headers: res.headers };
+      };
+      check((await upload(1)).status === 201 && (await upload(2)).status === 201, 'first two uploads refused');
+      const u3 = await upload(3);
+      check(u3.status === 429 && u3.data.code === 'UPLOAD_LIMIT' && Number(u3.headers.get('retry-after')) > 0, `third upload: ${u3.status} ${u3.data?.code}`);
+      const other = await prodUser('heavy2', '192.0.2.100');
+      const o = await prodApi('POST', '/api/profile/simulate', { ip: '192.0.2.100', token: other.token, body: { type: 'purchase', amount: 500 } });
+      check(o.status !== 429, `other user limited: ${o.status}`);
+      return 'Third check and third upload 429 with Retry-After; another user unaffected';
+    }
+  );
+
   M = 'Health Check';
   await tc(
     'HC-11',
@@ -1782,6 +1861,8 @@ async function main() {
     CORS_ORIGIN: PROD_ORIGIN,
     ADVISOR_DAILY_LIMIT: '2',
     REGISTER_MAX_PER_IP: '3',
+    CHECK_HOURLY_LIMIT: '2',
+    UPLOAD_HOURLY_LIMIT: '2',
     GEMINI_API_KEY: '',
     OPENAI_API_KEY: '',
     ALLOW_AI_SETTINGS: 'false',
