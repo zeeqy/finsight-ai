@@ -1,139 +1,124 @@
-# FinSight AI — An AI-Powered Personal Financial Management Web Application
+# FinSight AI
 
-> **Final Year Project (CSP600) — CS Netcentric (CDCS251)**  
-> **Phase 1 Implementation: Full-Stack Platform, Spend Analyser, & AI Copilot**  
-> **Aesthetic Theme: Maybank Signature Yellow & Charcoal Dark Mode**
+**An AI-powered personalised financial management web app for Malaysians aged 18 to 40.**
+
+Upload a real bank statement and get one dashboard that covers your spending, loans, life goals and insurance risk, with an AI advisor that answers from your own numbers.
+
+Final Year Project, Bachelor of Computer Science (Hons.) Netcentric Computing, Universiti Teknologi MARA (UiTM) Shah Alam. Supervised by Assoc. Prof. Ts. Dr. Nor Shahniza Kamal Bashah.
+
+![Home dashboard](docs/screenshots/home.jpg)
 
 ---
 
-## 📌 1. Project Overview & Architecture
+## Why
 
-**FinSight AI** is a commercial-grade SaaS platform built to transform personal finance from *reactive expense tracking* into *proactive, predictive risk management*.
+- Only about a third of Malaysians understand basic financial concepts, and over half could not survive 3 months without income.
+- The biggest expenses young Malaysians face (kahwin, children, Haji, a house, a car) are usually saved for informally, with no plan.
+- No local app joins spend tracking, loan risk, insurance risk and culturally relevant goal planning in one place.
 
-- **Design System:** Maybank Signature Yellow (`#FFC80A`), deep charcoal cards (`#141824`), and high-contrast typography inspired by Maybank2u and the MAE app.
-- **Frontend:** React.js, Tailwind CSS (v4), Recharts (dynamic doughnut chart), Lucide React.
-- **Backend:** Node.js with Express.js, JWT Authentication (in-memory token handling), Multer CSV ingestion pipeline.
-- **Database:** MySQL (relational schema with foreign keys) with an automated local JSON resilience fallback.
-- **AI Intelligence:** Supports **Google Gemini API** (free tier at Google AI Studio), **OpenAI API** (`gpt-4o-mini`), and the built-in **FinSight Pro** Malaysian fintech advisor.
-- **Bank Statement Parsing:** Native ingestion of real Malaysian bank statements (Bank Islam CASATIA CSV exports, Maybank2u exports, CIMB and Bank Islam PDF e-statements).
+FinSight answers one question across all of them: **"Can I afford this, and what does it do to the rest of my finances?"**
+
+---
+
+## Modules
+
+| # | Module | What it does | AI / ML | Result |
+|---|--------|--------------|---------|--------|
+| 1 | **Spend Analyser** | Reads PDF e-statements, CSV and XLSX; categorises every transaction; budgets, 50/30/20 check, recurring payments, next-month forecast | TF-IDF + Logistic Regression merged with keyword rules (Random Forest compared); Z-score anomaly flags | **72.1%** accuracy on merchants the model never saw, vs 44.8% for rules alone |
+| 2 | **AI Financial Advisor** | Chat that reads your real spending, goals, loan and insurance checks | LLM (Gemini / OpenAI) with figures computed in code and a reply validator | Replies with untraceable figures: **0/16** vs 6/16 for a plain prompt |
+| 3 | **Loan Default Predictor** | Instalment, total interest, DSR and default risk before you apply (flat vs reducing balance, 2026 rules) | XGBoost on Lending Club, leakage-free features only | ROC-AUC **0.697** (honest: no lender grade or rate used) |
+| 4 | **Life Goals Planner** | Savings plans for Kahwin, Children, Haji, House and Car; Tabung Haji, ASB and gold compared | ARIMA gold price forecast + feasibility from your real surplus | 12-month MAPE **11.6%** vs 18.4% naive |
+| 5 | **Insurance Risk Predictor** | How age, BMI, smoking and children shape your insurance risk, with what-if scenarios and a protection gap | Logistic Regression + exact SHAP explanations | ROC-AUC **0.953**, accuracy 89.9% |
+| + | **Financial Health Check** | One health index from every module and a "Can I afford this?" simulator (purchase, new commitment, income drop) | Deterministic simulator across all modules | Ties every module together |
+
+Tested on real e-statements from **AEON Bank, Bank Islam, CIMB and Maybank**: 100% of rows reconcile with the running balance.
+
+---
+
+## Screenshots
+
+| Spend Analyser | AI Financial Advisor |
+|---|---|
+| ![Spend Analyser](docs/screenshots/spend-analyser.jpg) | ![AI Financial Advisor](docs/screenshots/ai-advisor.jpg) |
+| **Loan Default Predictor** | **Life Goals Planner** |
+| ![Loan Default Predictor](docs/screenshots/loan-predictor.jpg) | ![Life Goals Planner](docs/screenshots/life-goals.jpg) |
+| **Insurance Risk Predictor** | **Financial Health Check** |
+| ![Insurance Risk Predictor](docs/screenshots/insurance-risk.jpg) | ![Financial Health Check](docs/screenshots/health-check.jpg) |
+
+---
+
+## Architecture
 
 ```
-Finsight AI Builds/
-├── server/
-│   ├── src/
-│   │   ├── index.js              # Express app entry & middleware
-│   │   ├── db.js                 # MySQL pool & resilient fallback engine
-│   │   ├── middleware/auth.js    # JWT Bearer token authentication
-│   │   ├── routes/
-│   │   │   ├── auth.js           # Register, Login, Me endpoints
-│   │   │   ├── transactions.js   # Statement parser, Period filters, Bulk delete, Re-categorize
-│   │   │   ├── budgets.js        # Custom category budget limit management
-│   │   │   └── advisor.js        # Real AI Advisor (Google Gemini / OpenAI / FinSight Pro)
-│   │   └── utils/categorizer.js  # Rule-based Malaysian transaction categorizer (Bank Islam CASATIA ready)
-│   ├── schema.sql                # Complete MySQL DDL schema
-│   ├── .env                      # Server configuration & AI API keys
-│   └── package.json
-└── client/
-    ├── src/
-    │   ├── context/AuthContext.jsx # In-memory JWT auth state & fetcher
-    │   ├── components/
-    │   │   ├── Sidebar.jsx        # Maybank Yellow navigation, user profile
-    │   │   └── Header.jsx         # Live DB indicator, active period pill, quick upload
-    │   ├── pages/
-    │   │   ├── LoginPage.jsx      # Maybank styled auth with 1-click Demo Fill
-    │   │   ├── RegisterPage.jsx   # Profile setup (Income, Age, Name)
-    │   │   ├── DashboardPage.jsx  # Module 1: Spend Analyser, Period selector, Bulk clear, Custom budgets
-    │   │   └── AdvisorPage.jsx    # Module 2: AI Financial Copilot Chat & Key Setup Modal
-    │   ├── App.jsx
-    │   └── index.css              # Maybank color tokens & custom styling
-    ├── vite.config.js             # Tailwind v4 plugin + /api reverse proxy
-    └── package.json
+React + Vite (client)
+        │  REST/JSON + JWT
+Express API (Node.js)  ── auth, uploads, PDF parsing, loan & savings maths, LLM calls
+   │              │  internal HTTP
+ MySQL      FastAPI ML service (Python)
+             /predict/category   Logistic Regression
+             /predict/loan       XGBoost
+             /predict/insurance  Logistic Regression + SHAP
+             /forecast/gold      ARIMA
 ```
 
----
+The browser only talks to Express. The ML service is stateless and internal, so each side can be scaled or replaced on its own. If the ML service is down, the app falls back to rules instead of failing.
 
-## 🌟 2. Key Features & Adjustments
+## Tech stack
 
-### 1. Hard to Clear or Delete Records (Categorised by Month/Year)
-- **Period Navigator:** Switch between months (e.g. `◀ October 2026 ▶`) or view All-Time History. All KPI cards, doughnut charts, and transaction ledger rows immediately sync to the selected month.
-- **Clear Records Modal:**
-  - Option A: Clear all records for the selected month/year only.
-  - Option B: Purge all transactions across all months.
-- **Batch Deletion:** Select checkboxes for individual transactions or "Select All" to bulk delete records.
-- **Single Row Deletion:** Quick trash icon on every row.
-
-### 2. Automated & Editable Record Categorisation
-- Enhanced rule-based categorizer specifically tuned for Malaysian banking merchants:
-  - `Transport`: Grab/MyTeksi, Shell, Petronas, Petron, Caltex, Semasa Parking, Setia City Mall Parking, TnG.
-  - `Food & Dining`: Rotiboy, McDonald's, KFC, Starbucks, Tealive, Zus, Luckin Coffee, Kopi Saigon, CBTL, Texas Chicken, TCRS, Fish & Co, Bread History, Restoran, Kopitiam, Nasi Kandar.
-  - `Groceries`: 99 Speedmart, KK FamilyMart, Lotus's, Aeon, Jaya Grocer, Giant.
-  - `Shopping`: Shopee, Lazada, TikTok Shop, Uniqlo, Padini, Watsons, Guardian, Mr DIY.
-  - `Utilities`: Digi, Celcom, Maxis, U Mobile, Unifi, TNB, Syabas/Air Selangor.
-  - `Education`: UiTM, Universiti, College, PTPTN.
-  - `Income / Inflow`: Inward DuitNow transfers (+RM), salary, freelance payments.
-- **In-line Category Reclassification:** Click any category badge directly in the Transaction Ledger to reassign it via dropdown on the fly!
-
-### 3. Custom Categories for Budget Targets
-- The **"+ Set Budget"** modal allows choosing from existing categories OR clicking **"+ Add Custom Category"**.
-- Set custom category limits (e.g., `Rent`, `Car Loan`, `Parents Allowance`, `Takaful`, `Gym`).
-- Real-time progress bars compare spending against assigned limits with visual alerts (Normal, Warning, Over Budget).
-- Delete budget limits with a single click.
-
-### 4. Support for Real Bank Statements (Bank Islam CASATIA)
-- Native parsing of `CASATIA_Report_17102026.csv` (located in `Real Bank csv/`).
-- Handles:
-  - Formats: `DD Mon YYYY` (e.g. `17 Oct 2026`), `DD/MM/YYYY`, `YYYY-MM-DD`.
-  - Column matching: `Reference 1`, `Transaction Description`, `Reference 2`, `Transaction Amount`.
-  - Cleans `+RM` and `-RM` amounts without UTC timezone shift.
-
-### 5. Real AI Financial Advisor with Setup Guide
-- **Google Gemini API Integration (Free Tier):**
-  - Instant access with a free key from [Google AI Studio](https://aistudio.google.com/app/apikey) (no credit card needed).
-- **OpenAI API Integration:**
-  - Supports `gpt-4o-mini` and `gpt-3.5-turbo`.
-- **FinSight Pro Local Engine:**
-  - Comprehensive, natural Malaysian fintech conversational model with full context injection (income, current spend, surplus, top category, anomalies).
-- **In-App AI Setup Modal:**
-  - Click **"AI Setup & Keys"** in the Advisor tab to enter, verify, and switch AI providers on the fly.
-- **Conversation Management:**
-  - Refresh or clear chat history anytime.
-
-### 6. Maybank Visual Identity
-- Signature Maybank Yellow (`#FFC80A`) badges, buttons, active states, and highlights.
-- Professional charcoal and onyx card backgrounds (`#0B0D13` base, `#141824` cards).
-- Clear, readable typography and visual cues matching modern fintech apps like Maybank MAE.
+- **Frontend:** React 19, Vite, Tailwind CSS v4, Recharts, three.js (3D mascot)
+- **Backend:** Node.js, Express, MySQL, JWT, bcrypt, pdf.js
+- **ML service:** Python, FastAPI, scikit-learn, XGBoost, statsmodels, pandas
+- **AI:** Google Gemini / OpenAI
+- **Deploy:** Docker Compose, Caddy (HTTPS), encrypted daily backups ([DEPLOY.md](DEPLOY.md))
 
 ---
 
-## 🚀 3. How to Run Locally
+## Evaluation
 
-### Step 1: Start the Backend Server
+| Area | How | Result |
+|------|-----|--------|
+| Functional | 144 automated test cases against the real API | 144/144 pass |
+| Unit | `node --test` on the services | 106/106 pass |
+| Performance | API latency, upload size, 25 concurrent users, Lighthouse | Read endpoints p95 ≤ 14 ms, 0 failures under load, Lighthouse desktop 100 / mobile 95 |
+| ML | Merchant-grouped CV, held-out test sets, rolling backtests, baselines for every model | See the Modules table |
+| Advisor | 16 questions × 3 prompt set-ups with real Gemini | Expected figure present 10/10 vs 5/10 baseline |
+
+Full write-ups are in [`evaluation/results/`](evaluation/results/).
+
+### Limitations (stated honestly)
+
+- Loan and insurance models are trained on US data (Lending Club, Medical Cost Personal), so they rank risk; they do not quote ringgit prices. Long car and house loans fall outside the loan data, so their score is shown as reference only.
+- The categoriser's training text is generated from a hand-built Malaysian merchant list, because no labelled Malaysian bank dataset is public.
+- Estimates only, not financial advice.
+
+---
+
+## Run locally
+
+Requirements: Node.js 20+, Python 3.14 (what it was built and tested on), MySQL (XAMPP works).
+
 ```bash
-cd "Finsight AI Builds/server"
-node src/index.js
-# Or: npm run dev
-```
-*Server runs on:* `http://localhost:5000`
+# 1. Database: start MySQL and import server/schema.sql
 
-### Step 2: Start the Frontend Client
-```bash
-cd "Finsight AI Builds/client"
-cmd.exe /c "npm run dev"
-# Or: npm run dev
+# 2. API
+cd server
+cp .env.example .env        # set JWT_SECRET, DB_*, and GEMINI_API_KEY (optional)
+npm install && npm run dev  # http://localhost:5000
+
+# 3. Client
+cd client
+npm install && npm run dev  # http://localhost:5173
+
+# 4. ML service
+cd ml-service
+python -m venv .venv && .venv/Scripts/pip install -r requirements.txt
+.venv/Scripts/python -m uvicorn main:app --port 8000
 ```
-*Frontend runs on:* `http://localhost:5173`
+
+Without a Gemini key the advisor uses an offline rule-based fallback. Without the ML service, categorisation falls back to rules.
 
 ---
 
-## 🔑 4. Setting up Real AI (Google Gemini — Free)
+## Author
 
-1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey).
-2. Click **"Create API Key"** and copy the generated key.
-3. Open FinSight AI in your browser (`http://localhost:5173`).
-4. Click **"AI Financial Advisor"** in the sidebar.
-5. Click **"AI Setup & Keys"** at the top right.
-6. Select **"Google Gemini"**, paste your key, and click **"Save & Verify Key"**.
-7. Alternatively, paste the key directly into `Finsight AI Builds/server/.env`:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
-   ```
+**Muhammad Haziq Danish** · [LinkedIn](https://www.linkedin.com/in/ziqd) · [GitHub](https://github.com/zeeqy)
